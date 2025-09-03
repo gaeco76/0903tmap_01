@@ -1,1145 +1,1216 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>7x34 테이블</title>
-<style>
-body {
-    margin: 0;
-    padding: 0; /* 패딩을 appRoot로 이동하여 전체 스케일 적용 */
-    font-family: Arial, sans-serif;
-    touch-action: manipulation;
-    font-size: 10px; /* 폰트 크기 12px → 10px로 축소 */
-    min-height: 100vh;
-    overflow-x: auto; /* 전체 페이지 가로 스크롤 활성화 */
-    transform-origin: 0 0; /* 확대/축소 기준점 설정 */
-}
-.app-root {
-    transform-origin: 0 0;
-    position: relative;
-    padding: 5% 5% 0 5%; /* 모든 여백을 5%로 통일 */
-}
-.table-container {
-    overflow: visible; /* 스크롤 완전히 제거 */
-    width: 100%; /* 너비 100%로 설정 */
-    max-width: 100%; /* 최대 너비 제한 해제 */
-    margin: 0 auto; /* 가운데 정렬 */
-    border: 1px solid #ccc;
-    padding: 5px;
-}
-.table-spacing {
-    height: 20%; /* 테이블 간 간격 20%로 설정 */
-    min-height: 20px;
-}
-table {
-    border-collapse: collapse;
-    width: 100%; /* 너비 100%로 설정 */
-    table-layout: auto; /* 자동 레이아웃으로 변경 */
-}
-#mainTable, #mainTable2 {
-    table-layout: auto; /* 자동 레이아웃으로 변경 */
-}
-td {
-    height: 30px;
-    border: 1px solid #333;
-    text-align: center;
-    position: relative;
-    user-select: none;
-    touch-action: none;
-    cursor: pointer;
-    overflow: hidden;
-}
-.interactive-cell {
-    width: 34px; /* 40px → 34px로 축소 */
-    min-width: 34px;
-    max-width: 34px;
-}
-.number-only-cell {
-    width: 24px; /* 28px → 24px로 축소 */
-    min-width: 24px;
-    max-width: 24px;
-}
-.cell-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    width: 100%;
-}
-/* 하단 테이블 컨테이너 스타일 */
-.bottom-tables-container {
-    display: flex;
-    justify-content: center; /* 가운데 정렬 */
-    align-items: flex-start;
-    margin-top: 10px;
-    gap: 2px; /* 테이블 간 간격 최소화 */
-}
-#summaryTable {
-    width: auto; /* 너비 자동 조정 */
-}
-#summaryTable td {
-    width: 60px; /* 원래 크기로 복원 */
-    height: 25px;
-    font-size: 10px; /* 폰트 크기 축소 */
-}
-.summary-header {
-    font-weight: bold;
-    background-color: #f0f0f0;
-}
-.summary-count {
-    text-align: center;
-}
-/* 하이라이트 테이블 스타일 */
-#highlightTable {
-    width: auto;
-}
-#highlightTable td {
-    width: 60px;
-    height: 25px;
-    font-size: 10px; /* 폰트 크기 축소 */
-}
-.highlight-header {
-    font-weight: bold;
-    background-color: #f0f0f0;
-}
-.highlight-cell {
-    text-align: center;
-    cursor: pointer;
-}
-/* 하이라이트 색상 클래스 */
-.highlight-blue {
-    background-color: #add8e6 !important; /* 연한 블루 */
-}
-.highlight-yellow {
-    background-color: #ffffe0 !important; /* 연한 노랑 */
-}
-.highlight-green {
-    background-color: #e0ffe0 !important; /* 연한 그린 */
-}
-.highlight-purple {
-    background-color: #e0d0ff !important; /* 연한 보라 */
-}
-.highlight-black {
-    font-weight: bold !important; /* 굵은 검정 */
-}
-.status-message {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 10px 15px;
-    background-color: #4CAF50;
-    color: white;
-    border-radius: 4px;
-    font-size: 14px;
-    z-index: 1000;
-    display: none;
-}
-.status-message.error {
-    background-color: #f44336;
-}
-.status-message.saving {
-    background-color: #2196F3;
-}
-.save-indicator {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: #cccccc;
-    z-index: 1000;
-}
-.save-indicator.saving {
-    background-color: #2196F3;
-    animation: pulse 1.5s infinite;
-}
-.save-indicator.success {
-    background-color: #4CAF50;
-}
-.save-indicator.error {
-    background-color: #f44336;
-}
-@keyframes pulse {
-    0% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7);
-    }
-    
-    70% {
-        transform: scale(1);
-        box-shadow: 0 0 0 10px rgba(33, 150, 243, 0);
-    }
-    
-    100% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
-    }
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>7x34 테이블</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            /* 패딩을 appRoot로 이동하여 전체 스케일 적용 */
+            font-family: Arial, sans-serif;
+            touch-action: manipulation;
+            font-size: 10px;
+            /* 폰트 크기 12px → 10px로 축소 */
+            min-height: 100vh;
+            overflow-x: auto;
+            /* 전체 페이지 가로 스크롤 활성화 */
+            transform-origin: 0 0;
+            /* 확대/축소 기준점 설정 */
+        }
 
-/* 반응형 스타일 추가 */
-@media (max-width: 768px) {
-    body {
-        font-size: 8px; /* 모바일에서 폰트 크기 추가 축소 */
-        padding: 0; /* 모바일에서도 app-root 패딩 사용 */
-    }
-    
-    .app-root {
-        padding: 5% 5% 0 5%; /* 모바일에서도 모든 여백을 5%로 통일 */
-    }
-    
-    .interactive-cell {
-        width: 28px; /* 모바일에서 인터랙티브 셀 크기 추가 축소 */
-        min-width: 28px;
-        max-width: 28px;
-    }
-    
-    .number-only-cell {
-        width: 20px; /* 모바일에서 숫자 전용 셀 크기 추가 축소 */
-        min-width: 20px;
-        max-width: 20px;
-    }
-    
-    td {
-        height: 25px; /* 모바일에서 셀 높이 축소 */
-    }
-    
-    #summaryTable td, #highlightTable td {
-        width: 50px; /* 모바일에서 하단 테이블 셀 너비 축소 */
-        height: 22px;
-        font-size: 8px; /* 모바일에서 하단 테이블 폰트 크기 축소 */
-    }
-    
-    .status-message {
-        font-size: 12px; /* 모바일에서 상태 메시지 폰트 크기 축소 */
-        padding: 8px 12px;
-    }
-}
-</style>
+        .app-root {
+            transform-origin: 0 0;
+            position: relative;
+            padding: 5% 10% 0 5%;
+            /* 우측 여백을 10%로 변경 */
+        }
+
+        .table-container {
+            overflow: visible;
+            /* 스크롤 완전히 제거 */
+            width: 100%;
+            /* 너비 100%로 설정 */
+            max-width: 100%;
+            /* 최대 너비 제한 해제 */
+            margin: 0 auto;
+            /* 가운데 정렬 */
+            border: 1px solid #ccc;
+            padding: 5px;
+        }
+
+        .table-spacing {
+            height: 20%;
+            /* 테이블 간 간격 20%로 설정 */
+            min-height: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            /* 너비 100%로 설정 */
+            table-layout: auto;
+            /* 자동 레이아웃으로 변경 */
+        }
+
+        #mainTable,
+        #mainTable2 {
+            table-layout: auto;
+            /* 자동 레이아웃으로 변경 */
+        }
+
+        td {
+            height: 30px;
+            border: 1px solid #333;
+            text-align: center;
+            position: relative;
+            user-select: none;
+            touch-action: none;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .interactive-cell {
+            width: 34px;
+            /* 40px → 34px로 축소 */
+            min-width: 34px;
+            max-width: 34px;
+        }
+
+        .number-only-cell {
+            width: 24px;
+            /* 28px → 24px로 축소 */
+            min-width: 24px;
+            max-width: 24px;
+        }
+
+        .cell-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+        }
+
+        /* 하단 테이블 컨테이너 스타일 */
+        .bottom-tables-container {
+            display: flex;
+            justify-content: center;
+            /* 가운데 정렬 */
+            align-items: flex-start;
+            margin-top: 10px;
+            gap: 2px;
+            /* 테이블 간 간격 최소화 */
+        }
+
+        #summaryTable {
+            width: auto;
+            /* 너비 자동 조정 */
+        }
+
+        #summaryTable td {
+            width: 60px;
+            /* 원래 크기로 복원 */
+            height: 25px;
+            font-size: 10px;
+            /* 폰트 크기 축소 */
+        }
+
+        .summary-header {
+            font-weight: bold;
+            background-color: #f0f0f0;
+        }
+
+        .summary-count {
+            text-align: center;
+        }
+
+        /* 하이라이트 테이블 스타일 */
+        #highlightTable {
+            width: auto;
+        }
+
+        #highlightTable td {
+            width: 60px;
+            height: 25px;
+            font-size: 10px;
+            /* 폰트 크기 축소 */
+        }
+
+        .highlight-header {
+            font-weight: bold;
+            background-color: #f0f0f0;
+        }
+
+        .highlight-cell {
+            text-align: center;
+            cursor: pointer;
+        }
+
+        /* 하이라이트 색상 클래스 */
+        .highlight-blue {
+            background-color: #add8e6 !important;
+            /* 연한 블루 */
+        }
+
+        .highlight-yellow {
+            background-color: #ffffe0 !important;
+            /* 연한 노랑 */
+        }
+
+        .highlight-green {
+            background-color: #e0ffe0 !important;
+            /* 연한 그린 */
+        }
+
+        .highlight-purple {
+            background-color: #e0d0ff !important;
+            /* 연한 보라 */
+        }
+
+        .highlight-black {
+            font-weight: bold !important;
+            /* 굵은 검정 */
+        }
+
+        .status-message {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            font-size: 14px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .status-message.error {
+            background-color: #f44336;
+        }
+
+        .status-message.saving {
+            background-color: #2196F3;
+        }
+
+        .save-indicator {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #cccccc;
+            z-index: 1000;
+        }
+
+        .save-indicator.saving {
+            background-color: #2196F3;
+            animation: pulse 1.5s infinite;
+        }
+
+        .save-indicator.success {
+            background-color: #4CAF50;
+        }
+
+        .save-indicator.error {
+            background-color: #f44336;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(33, 150, 243, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
+            }
+        }
+
+        /* 반응형 스타일 추가 */
+        @media (max-width: 768px) {
+            body {
+                font-size: 8px;
+                /* 모바일에서 폰트 크기 추가 축소 */
+                padding: 0;
+                /* 모바일에서도 app-root 패딩 사용 */
+            }
+
+            .app-root {
+                padding: 5% 10% 0 5%;
+                /* 모바일에서도 우측 여백을 10%로 변경 */
+            }
+
+            .interactive-cell {
+                width: 28px;
+                /* 모바일에서 인터랙티브 셀 크기 추가 축소 */
+                min-width: 28px;
+                max-width: 28px;
+            }
+
+            .number-only-cell {
+                width: 20px;
+                /* 모바일에서 숫자 전용 셀 크기 추가 축소 */
+                min-width: 20px;
+                max-width: 20px;
+            }
+
+            td {
+                height: 25px;
+                /* 모바일에서 셀 높이 축소 */
+            }
+
+            #summaryTable td,
+            #highlightTable td {
+                width: 50px;
+                /* 모바일에서 하단 테이블 셀 너비 축소 */
+                height: 22px;
+                font-size: 8px;
+                /* 모바일에서 하단 테이블 폰트 크기 축소 */
+            }
+
+            .status-message {
+                font-size: 12px;
+                /* 모바일에서 상태 메시지 폰트 크기 축소 */
+                padding: 8px 12px;
+            }
+        }
+    </style>
 </head>
-<body>
-<div id="appRoot" class="app-root">
-<div class="table-container">
-    <table id="mainTable"></table>
-</div>
-<div class="table-spacing"></div> <!-- 테이블 간 간격을 위한 div -->
-<div class="table-container">
-    <table id="mainTable2"></table>
-</div>
-<!-- 하단 테이블 컨테이너 -->
-<div class="bottom-tables-container">
-    <table id="summaryTable">
-        <tr>
-            <td class="summary-header">과착</td>
-            <td class="summary-count" id="count-과착">0</td>
-        </tr>
-        <tr>
-            <td class="summary-header">바코</td>
-            <td class="summary-count" id="count-바코">0</td>
-        </tr>
-        <tr>
-            <td class="summary-header">택오</td>
-            <td class="summary-count" id="count-택오">0</td>
-        </tr>
-        <tr>
-            <td class="summary-header">기타</td>
-            <td class="summary-count" id="count-기타">0</td>
-        </tr>
-        <tr>
-            <td class="summary-header">유통</td>
-            <td class="summary-count" id="count-유통">0</td>
-        </tr>
-    </table>
-    <table id="highlightTable">
-        <tr>
-            <td class="highlight-header">과착</td>
-            <td class="highlight-cell" data-type="과착">0</td>
-        </tr>
-        <tr>
-            <td class="highlight-header">바코</td>
-            <td class="highlight-cell" data-type="바코">0</td>
-        </tr>
-        <tr>
-            <td class="highlight-header">택오</td>
-            <td class="highlight-cell" data-type="택오">0</td>
-        </tr>
-        <tr>
-            <td class="highlight-header">기타</td>
-            <td class="highlight-cell" data-type="기타">0</td>
-        </tr>
-        <tr>
-            <td class="highlight-header">유통</td>
-            <td class="highlight-cell" data-type="유통">0</td>
-        </tr>
-    </table>
-</div>
-<div id="statusMessage" class="status-message"></div>
-<div id="saveIndicator" class="save-indicator"></div>
-</div>
-<script>
-// 전역 변수로 마지막 상태 저장
-let lastSavedState = {
-    table1: [],
-    table2: [],
-    highlightTable: []
-};
-// 핀치 줌 관련 변수
-let initialDistance = 0;
-let initialScale = 1;
-let currentScale = 1;
-const MIN_SCALE = 0.1;
-const MAX_SCALE = 3;
 
-function setAppScale(scale) {
-    currentScale = scale;
-    const root = document.getElementById('appRoot');
-    if (root) {
-        root.style.transform = 'scale(' + currentScale + ')';
-    }
-}
-// 저장 상태 추적 변수
-let hasUnsavedChanges = false;
-let isSaving = false; // 저장 중인지 여부 추적
-// Create tables
-function createTable(tableId) {
-    const table = document.getElementById(tableId);
-    
-    // Create header row
-    const headerRow = document.createElement('tr');
-    // Create 17 merged cells (2 columns each)
-    for (let j = 17; j >= 1; j--) {
-        const headerCell = document.createElement('td');
-        headerCell.colSpan = 2;
-        headerCell.style.fontWeight = 'bold';
-        headerCell.style.backgroundColor = '#f0f0f0';
-        const content = document.createElement('div');
-        content.className = 'cell-content';
-        content.textContent = j;
-        headerCell.appendChild(content);
-        headerRow.appendChild(headerCell);
-    }
-    
-    table.appendChild(headerRow);
-    
-    // Create data rows
-    for (let i = 0; i < 7; i++) {
-        const row = document.createElement('tr');
-        for (let j = 0; j < 34; j++) {
-            const cell = document.createElement('td');
-            // Odd columns (1, 3, 5, ...) are interactive, even columns are number-only
-            cell.className = (j % 2 === 0) ? 'interactive-cell' : 'number-only-cell';
-            cell.dataset.tableId = tableId;
-            cell.dataset.row = i;
-            cell.dataset.col = j;
-            if (j % 2 === 0) {
-                cell.style.fontWeight = 'bold';
+<body>
+    <div id="appRoot" class="app-root">
+        <div class="table-container">
+            <table id="mainTable"></table>
+        </div>
+        <div class="table-spacing"></div> <!-- 테이블 간 간격을 위한 div -->
+        <div class="table-container">
+            <table id="mainTable2"></table>
+        </div>
+        <!-- 하단 테이블 컨테이너 -->
+        <div class="bottom-tables-container">
+            <table id="summaryTable">
+                <tr>
+                    <td class="summary-header">과착</td>
+                    <td class="summary-count" id="count-과착">0</td>
+                </tr>
+                <tr>
+                    <td class="summary-header">바코</td>
+                    <td class="summary-count" id="count-바코">0</td>
+                </tr>
+                <tr>
+                    <td class="summary-header">택오</td>
+                    <td class="summary-count" id="count-택오">0</td>
+                </tr>
+                <tr>
+                    <td class="summary-header">기타</td>
+                    <td class="summary-count" id="count-기타">0</td>
+                </tr>
+                <tr>
+                    <td class="summary-header">유통</td>
+                    <td class="summary-count" id="count-유통">0</td>
+                </tr>
+            </table>
+            <table id="highlightTable">
+                <tr>
+                    <td class="highlight-header">과착</td>
+                    <td class="highlight-cell" data-type="과착">0</td>
+                </tr>
+                <tr>
+                    <td class="highlight-header">바코</td>
+                    <td class="highlight-cell" data-type="바코">0</td>
+                </tr>
+                <tr>
+                    <td class="highlight-header">택오</td>
+                    <td class="highlight-cell" data-type="택오">0</td>
+                </tr>
+                <tr>
+                    <td class="highlight-header">기타</td>
+                    <td class="highlight-cell" data-type="기타">0</td>
+                </tr>
+                <tr>
+                    <td class="highlight-header">유통</td>
+                    <td class="highlight-cell" data-type="유통">0</td>
+                </tr>
+            </table>
+        </div>
+        <div id="statusMessage" class="status-message"></div>
+        <div id="saveIndicator" class="save-indicator"></div>
+    </div>
+    <script>
+        // 전역 변수로 마지막 상태 저장
+        let lastSavedState = {
+            table1: [],
+            table2: [],
+            highlightTable: []
+        };
+        // 핀치 줌 관련 변수
+        let initialDistance = 0;
+        let initialScale = 1;
+        let currentScale = 1;
+        const MIN_SCALE = 0.1;
+        const MAX_SCALE = 3;
+
+        function setAppScale(scale) {
+            currentScale = scale;
+            const root = document.getElementById('appRoot');
+            if (root) {
+                root.style.transform = 'scale(' + currentScale + ')';
             }
-            const content = document.createElement('div');
-            content.className = 'cell-content';
-            content.textContent = (j % 2 === 0) ? '-' : '0';
-            cell.appendChild(content);
-            row.appendChild(cell);
         }
-        table.appendChild(row);
-    }
-}
-// Create both tables
-createTable('mainTable');
-createTable('mainTable2');
-// Interactive cells (odd columns: 1, 3, 5, 7, 9, 11, 13, 15, 17)
-const cells = document.querySelectorAll('.interactive-cell');
-const modes = ['과착', '바코', '택오', '기타', '유통', '-']; // "숫자"를 "과착"으로 변경
-function updateSummary() {
-    const counts = {
-        '과착': 0, // "숫자"를 "과착"으로 변경
-        '바코': 0,
-        '택오': 0,
-        '기타': 0,
-        '유통': 0
-    };
-    
-    cells.forEach(cell => {
-        const content = cell.querySelector('.cell-content').textContent;
-        if (content !== '-' && !isNaN(content)) {
-            counts['과착']++; // "숫자"를 "과착"으로 변경
-        } else if (counts.hasOwnProperty(content)) {
-            counts[content]++;
-        }
-    });
-    
-    Object.keys(counts).forEach(key => {
-        const countElement = document.getElementById(`count-${key}`);
-        if (countElement) {
-            countElement.textContent = counts[key];
-        }
-    });
-}
-// 상태 메시지 표시
-function showStatusMessage(message, isError = false, isSaving = false) {
-    const statusElement = document.getElementById('statusMessage');
-    statusElement.textContent = message;
-    statusElement.style.display = 'block';
-    
-    if (isError) {
-        statusElement.classList.add('error');
-        statusElement.classList.remove('saving');
-    } else if (isSaving) {
-        statusElement.classList.add('saving');
-        statusElement.classList.remove('error');
-    } else {
-        statusElement.classList.remove('error', 'saving');
-    }
-    
-    // 3초 후 메시지 숨기기
-    setTimeout(() => {
-        statusElement.style.display = 'none';
-    }, 3000);
-}
-// 저장 상태 표시기 변경
-function updateSaveIndicator(status) {
-    const indicator = document.getElementById('saveIndicator');
-    indicator.className = 'save-indicator';
-    
-    if (status === 'saving') {
-        indicator.classList.add('saving');
-    } else if (status === 'success') {
-        indicator.classList.add('success');
-        setTimeout(() => {
-            indicator.className = 'save-indicator';
-        }, 1000);
-    } else if (status === 'error') {
-        indicator.classList.add('error');
-        setTimeout(() => {
-            indicator.className = 'save-indicator';
-        }, 3000);
-    }
-}
-// 디바운스 함수
-function debounce(func, wait) {
-    let timeout;
-    return function(...args) {
-        const context = this;
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(context, args), wait);
-    };
-}
-// 서버에 데이터 저장
-const saveToServer = debounce(function() {
-    // 이미 저장 중이면 중복 저장 방지
-    if (isSaving) return;
-    
-    const data = {
-        table1: [],
-        table2: [],
-        highlightTable: []
-    };
-    
-    // Collect data from both tables
-    document.querySelectorAll('#mainTable .interactive-cell, #mainTable .number-only-cell').forEach(cell => {
-        data.table1.push({
-            row: cell.dataset.row,
-            col: cell.dataset.col,
-            value: cell.querySelector('.cell-content').textContent
-        });
-    });
-    
-    document.querySelectorAll('#mainTable2 .interactive-cell, #mainTable2 .number-only-cell').forEach(cell => {
-        data.table2.push({
-            row: cell.dataset.row,
-            col: cell.dataset.col,
-            value: cell.querySelector('.cell-content').textContent
-        });
-    });
-    
-    // Collect data from highlight table
-    document.querySelectorAll('#highlightTable .highlight-cell').forEach(cell => {
-        data.highlightTable.push({
-            type: cell.dataset.type,
-            value: cell.textContent
-        });
-    });
-    
-    isSaving = true;
-    updateSaveIndicator('saving');
-    
-    google.script.run
-        .withSuccessHandler(function(result) {
-            isSaving = false;
-            if (result.success) {
-                // 저장 성공 시에만 마지막 상태 업데이트
-                lastSavedState = JSON.parse(JSON.stringify(data));
-                hasUnsavedChanges = false; // 저장 완료 표시
-                updateSaveIndicator('success');
-                showStatusMessage('데이터가 저장되었습니다.');
-                
-                // 로컬 스토리지에도 저장 (백업)
-                localStorage.setItem('TABLE_DATA_LOCAL', JSON.stringify(data));
-            } else {
-                updateSaveIndicator('error');
-                showStatusMessage('저장 실패: ' + result.error, true);
-                
-                // 저장 실패 시 2초 후 재시도
-                setTimeout(() => {
-                    if (!isSaving) {
-                        saveToServer();
+        // 저장 상태 추적 변수
+        let hasUnsavedChanges = false;
+        let isSaving = false; // 저장 중인지 여부 추적
+        // Create tables
+        function createTable(tableId) {
+            const table = document.getElementById(tableId);
+
+            // Create header row
+            const headerRow = document.createElement('tr');
+            // Create 17 merged cells (2 columns each)
+            for (let j = 17; j >= 1; j--) {
+                const headerCell = document.createElement('td');
+                headerCell.colSpan = 2;
+                headerCell.style.fontWeight = 'bold';
+                headerCell.style.backgroundColor = '#f0f0f0';
+                const content = document.createElement('div');
+                content.className = 'cell-content';
+                content.textContent = j;
+                headerCell.appendChild(content);
+                headerRow.appendChild(headerCell);
+            }
+
+            table.appendChild(headerRow);
+
+            // Create data rows
+            for (let i = 0; i < 7; i++) {
+                const row = document.createElement('tr');
+                for (let j = 0; j < 34; j++) {
+                    const cell = document.createElement('td');
+                    // Odd columns (1, 3, 5, ...) are interactive, even columns are number-only
+                    cell.className = (j % 2 === 0) ? 'interactive-cell' : 'number-only-cell';
+                    cell.dataset.tableId = tableId;
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    if (j % 2 === 0) {
+                        cell.style.fontWeight = 'bold';
                     }
-                }, 2000);
+                    const content = document.createElement('div');
+                    content.className = 'cell-content';
+                    content.textContent = (j % 2 === 0) ? '-' : '0';
+                    cell.appendChild(content);
+                    row.appendChild(cell);
+                }
+                table.appendChild(row);
             }
-        })
-        .withFailureHandler(function(error) {
-            isSaving = false;
-            updateSaveIndicator('error');
-            showStatusMessage('저장 오류: ' + error.message, true);
-            
-            // 저장 실패 시 2초 후 재시도
+        }
+        // Create both tables
+        createTable('mainTable');
+        createTable('mainTable2');
+        // Interactive cells (odd columns: 1, 3, 5, 7, 9, 11, 13, 15, 17)
+        const cells = document.querySelectorAll('.interactive-cell');
+        const modes = ['과착', '바코', '택오', '기타', '유통', '-']; // "숫자"를 "과착"으로 변경
+        function updateSummary() {
+            const counts = {
+                '과착': 0, // "숫자"를 "과착"으로 변경
+                '바코': 0,
+                '택오': 0,
+                '기타': 0,
+                '유통': 0
+            };
+
+            cells.forEach(cell => {
+                const content = cell.querySelector('.cell-content').textContent;
+                if (content !== '-' && !isNaN(content)) {
+                    counts['과착']++; // "숫자"를 "과착"으로 변경
+                } else if (counts.hasOwnProperty(content)) {
+                    counts[content]++;
+                }
+            });
+
+            Object.keys(counts).forEach(key => {
+                const countElement = document.getElementById(`count-${key}`);
+                if (countElement) {
+                    countElement.textContent = counts[key];
+                }
+            });
+        }
+        // 상태 메시지 표시
+        function showStatusMessage(message, isError = false, isSaving = false) {
+            const statusElement = document.getElementById('statusMessage');
+            statusElement.textContent = message;
+            statusElement.style.display = 'block';
+
+            if (isError) {
+                statusElement.classList.add('error');
+                statusElement.classList.remove('saving');
+            } else if (isSaving) {
+                statusElement.classList.add('saving');
+                statusElement.classList.remove('error');
+            } else {
+                statusElement.classList.remove('error', 'saving');
+            }
+
+            // 3초 후 메시지 숨기기
             setTimeout(() => {
-                if (!isSaving) {
-                    saveToServer();
-                }
-            }, 2000);
-        })
-        .saveData(data);
-}, 300); // 디바운스 시간 300ms로 단축
-// 서버에서 데이터 불러오기
-function loadFromServer() {
-    updateSaveIndicator('saving');
-    showStatusMessage('데이터 불러오는 중...', false, true);
-    
-    google.script.run
-        .withSuccessHandler(function(data) {
-            let hasData = false;
-            
-            if (data.table1 && data.table1.length > 0) {
-                hasData = true;
-                data.table1.forEach(item => {
-                    const cell = document.querySelector(`#mainTable [data-row="${item.row}"][data-col="${item.col}"]`);
-                    if (cell) {
-                        cell.querySelector('.cell-content').textContent = item.value;
-                    }
+                statusElement.style.display = 'none';
+            }, 3000);
+        }
+        // 저장 상태 표시기 변경
+        function updateSaveIndicator(status) {
+            const indicator = document.getElementById('saveIndicator');
+            indicator.className = 'save-indicator';
+
+            if (status === 'saving') {
+                indicator.classList.add('saving');
+            } else if (status === 'success') {
+                indicator.classList.add('success');
+                setTimeout(() => {
+                    indicator.className = 'save-indicator';
+                }, 1000);
+            } else if (status === 'error') {
+                indicator.classList.add('error');
+                setTimeout(() => {
+                    indicator.className = 'save-indicator';
+                }, 3000);
+            }
+        }
+        // 디바운스 함수
+        function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+        // 서버에 데이터 저장
+        const saveToServer = debounce(function () {
+            // 이미 저장 중이면 중복 저장 방지
+            if (isSaving) return;
+
+            const data = {
+                table1: [],
+                table2: [],
+                highlightTable: []
+            };
+
+            // Collect data from both tables
+            document.querySelectorAll('#mainTable .interactive-cell, #mainTable .number-only-cell').forEach(cell => {
+                data.table1.push({
+                    row: cell.dataset.row,
+                    col: cell.dataset.col,
+                    value: cell.querySelector('.cell-content').textContent
                 });
-            }
-            
-            if (data.table2 && data.table2.length > 0) {
-                hasData = true;
-                data.table2.forEach(item => {
-                    const cell = document.querySelector(`#mainTable2 [data-row="${item.row}"][data-col="${item.col}"]`);
-                    if (cell) {
-                        cell.querySelector('.cell-content').textContent = item.value;
-                    }
+            });
+
+            document.querySelectorAll('#mainTable2 .interactive-cell, #mainTable2 .number-only-cell').forEach(cell => {
+                data.table2.push({
+                    row: cell.dataset.row,
+                    col: cell.dataset.col,
+                    value: cell.querySelector('.cell-content').textContent
                 });
-            }
-            
-            // Load highlight table data
-            if (data.highlightTable && data.highlightTable.length > 0) {
-                hasData = true;
-                data.highlightTable.forEach(item => {
-                    const cell = document.querySelector(`#highlightTable [data-type="${item.type}"]`);
-                    if (cell) {
-                        cell.textContent = item.value;
-                    }
+            });
+
+            // Collect data from highlight table
+            document.querySelectorAll('#highlightTable .highlight-cell').forEach(cell => {
+                data.highlightTable.push({
+                    type: cell.dataset.type,
+                    value: cell.textContent
                 });
-            }
-            
-            // 마지막 상태 업데이트
-            if (hasData) {
-                lastSavedState = JSON.parse(JSON.stringify(data));
-                // 로컬 스토리지에도 저장
-                localStorage.setItem('TABLE_DATA_LOCAL', JSON.stringify(data));
-            }
-            
-            updateSummary();
-            updateHighlights(); // 하이라이트 업데이트
-            updateSaveIndicator('success');
-            showStatusMessage(hasData ? '데이터를 불러왔습니다.' : '저장된 데이터가 없습니다.');
-        })
-        .withFailureHandler(function(error) {
-            updateSaveIndicator('error');
-            showStatusMessage('불러오기 오류: ' + error.message, true);
-            
-            // 서버에서 데이터 불러오기 실패 시 로컬 스토리지에서 시도
-            try {
-                const localData = localStorage.getItem('TABLE_DATA_LOCAL');
-                if (localData) {
-                    const parsedData = JSON.parse(localData);
-                    
-                    if (parsedData.table1 && parsedData.table1.length > 0) {
-                        parsedData.table1.forEach(item => {
-                            const cell = document.querySelector(`#mainTable [data-row="${item.row}"][data-col="${item.col}"]`);
-                            if (cell) {
-                                cell.querySelector('.cell-content').textContent = item.value;
+            });
+
+            isSaving = true;
+            updateSaveIndicator('saving');
+
+            google.script.run
+                .withSuccessHandler(function (result) {
+                    isSaving = false;
+                    if (result.success) {
+                        // 저장 성공 시에만 마지막 상태 업데이트
+                        lastSavedState = JSON.parse(JSON.stringify(data));
+                        hasUnsavedChanges = false; // 저장 완료 표시
+                        updateSaveIndicator('success');
+                        showStatusMessage('데이터가 저장되었습니다.');
+
+                        // 로컬 스토리지에도 저장 (백업)
+                        localStorage.setItem('TABLE_DATA_LOCAL', JSON.stringify(data));
+                    } else {
+                        updateSaveIndicator('error');
+                        showStatusMessage('저장 실패: ' + result.error, true);
+
+                        // 저장 실패 시 2초 후 재시도
+                        setTimeout(() => {
+                            if (!isSaving) {
+                                saveToServer();
                             }
-                        });
+                        }, 2000);
                     }
-                    
-                    if (parsedData.table2 && parsedData.table2.length > 0) {
-                        parsedData.table2.forEach(item => {
-                            const cell = document.querySelector(`#mainTable2 [data-row="${item.row}"][data-col="${item.col}"]`);
-                            if (cell) {
-                                cell.querySelector('.cell-content').textContent = item.value;
-                            }
-                        });
-                    }
-                    
-                    if (parsedData.highlightTable && parsedData.highlightTable.length > 0) {
-                        parsedData.highlightTable.forEach(item => {
-                            const cell = document.querySelector(`#highlightTable [data-type="${item.type}"]`);
-                            if (cell) {
-                                cell.textContent = item.value;
-                            }
-                        });
-                    }
-                    
-                    // 마지막 상태 업데이트
-                    lastSavedState = JSON.parse(JSON.stringify(parsedData));
-                    
-                    updateSummary();
-                    updateHighlights();
-                    showStatusMessage('로컬 데이터를 불러왔습니다.');
-                }
-            } catch (e) {
-                console.error('로컬 스토리지 데이터 복원 오류:', e);
-            }
-        })
-        .loadData();
-}
-// 하이라이트 업데이트 함수
-function updateHighlights() {
-    // 모든 하이라이트 제거
-    document.querySelectorAll('.interactive-cell').forEach(cell => {
-        cell.classList.remove('highlight-blue', 'highlight-yellow', 'highlight-green', 'highlight-purple', 'highlight-black');
-    });
-    
-    // 하이라이트 테이블에서 값 가져오기
-    const highlightCells = document.querySelectorAll('#highlightTable .highlight-cell');
-    
-    highlightCells.forEach(cell => {
-        const type = cell.dataset.type;
-        const value = parseInt(cell.textContent);
-        
-        if (value > 0) {
-            if (type === '과착') {
-                // 과착: 메인 테이블 홀수열에서 같은 숫자 찾아서 연한 블루로 하이라이트
-                document.querySelectorAll('.interactive-cell').forEach(interactiveCell => {
-                    const cellValue = interactiveCell.querySelector('.cell-content').textContent;
-                    if (!isNaN(cellValue) && parseInt(cellValue) === value) {
-                        interactiveCell.classList.add('highlight-blue');
-                    }
-                });
-            } else {
-                // 바코, 택오, 기타, 유통: 메인 테이블 홀수열에서 같은 글자 찾아서 해당 색으로 하이라이트
-                document.querySelectorAll('.interactive-cell').forEach(interactiveCell => {
-                    const cellValue = interactiveCell.querySelector('.cell-content').textContent;
-                    if (cellValue === type) {
-                        if (type === '바코') {
-                            interactiveCell.classList.add('highlight-yellow');
-                        } else if (type === '택오') {
-                            interactiveCell.classList.add('highlight-green');
-                        } else if (type === '기타') {
-                            interactiveCell.classList.add('highlight-purple');
-                        } else if (type === '유통') {
-                            interactiveCell.classList.add('highlight-black');
+                })
+                .withFailureHandler(function (error) {
+                    isSaving = false;
+                    updateSaveIndicator('error');
+                    showStatusMessage('저장 오류: ' + error.message, true);
+
+                    // 저장 실패 시 2초 후 재시도
+                    setTimeout(() => {
+                        if (!isSaving) {
+                            saveToServer();
                         }
-                    }
-                });
-            }
-        }
-    });
-}
-cells.forEach(cell => {
-    let mode = 5; // Start with '-' mode (index 5)
-    let number = 0; // 홀수열은 0부터 시작
-    let startX = 0;
-    let startY = 0;
-    let isSwiping = false;
-    let isScrolling = false;
-    
-    const content = cell.querySelector('.cell-content');
-    
-    function updateDisplay() {
-        if (modes[mode] === '과착') { // "숫자"를 "과착"으로 변경
-            content.textContent = number;
-        } else {
-            content.textContent = modes[mode];
-        }
-        updateSummary();
-        hasUnsavedChanges = true; // 변경 사항 있음 표시
-        saveToServer(); // 값이 변경될 때마다 서버에 자동 저장 (디바운스 적용)
-        updateHighlights(); // 하이라이트 업데이트
-    }
-    
-    cell.addEventListener('touchstart', e => {
-        if (e.touches.length === 1) { // 단일 터치만 처리
-            e.preventDefault();
-            e.stopPropagation();
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            isSwiping = false;
-            isScrolling = false;
-        }
-    });
-    
-    cell.addEventListener('touchmove', e => {
-        if (e.touches.length === 1) { // 단일 터치만 처리
-            e.preventDefault();
-            e.stopPropagation();
-            const deltaX = e.touches[0].clientX - startX;
-            const deltaY = e.touches[0].clientY - startY;
-            
-            if (!isSwiping && !isScrolling) {
-                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
-                    isSwiping = true;
-                } else if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 10) {
-                    isScrolling = true;
-                }
-            }
-            
-            if (isSwiping && Math.abs(deltaX) > 30) {
-                mode = (mode + 1) % modes.length;
-                updateDisplay();
-                isSwiping = false;
-                startX = e.touches[0].clientX;
-            }
-            
-            if (isScrolling && modes[mode] === '과착') { // "숫자"를 "과착"으로 변경
-                if (deltaY < -20) {
-                    number = (number + 1) % 32; // 0-31 순환
-                    updateDisplay();
-                    startY = e.touches[0].clientY;
-                } else if (deltaY > 20) {
-                    number = (number - 1 + 32) % 32; // 0-31 순환
-                    updateDisplay();
-                    startY = e.touches[0].clientY;
-                }
-            }
-        }
-    });
-    
-    cell.addEventListener('click', e => {
-        // 마우스 클릭 시 모드 변경 (전체 셀 영역)
-        mode = (mode + 1) % modes.length;
-        updateDisplay();
-    });
-    
-    cell.addEventListener('contextmenu', e => {
-        e.preventDefault();
-        if (modes[mode] === '과착') { // "숫자"를 "과착"으로 변경
-            number = (number - 1 + 32) % 32; // 0-31 순환
-            updateDisplay();
-        }
-    });
-    
-    cell.addEventListener('wheel', e => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (modes[mode] === '과착') { // "숫자"를 "과착"으로 변경
-            if (e.deltaY < 0) {
-                number = (number + 1) % 32; // 0-31 순환
-            } else {
-                number = (number - 1 + 32) % 32; // 0-31 순환
-            }
-            updateDisplay();
-        }
-    }, { passive: false });
-    
-    updateDisplay();
-});
-// Initialize summary on load
-updateSummary();
-// Number-only cells (even columns: 2, 4, 6, 8, 10, 12, 14, 16)
-const numberCells = document.querySelectorAll('.number-only-cell');
-numberCells.forEach(cell => {
-    let number = 0;
-    let startY = 0;
-    
-    const content = cell.querySelector('.cell-content');
-    
-    function updateNumber() {
-        content.textContent = number;
-        hasUnsavedChanges = true; // 변경 사항 있음 표시
-        saveToServer(); // 값이 변경될 때마다 서버에 자동 저장 (디바운스 적용)
-    }
-    
-    cell.addEventListener('touchstart', e => {
-        if (e.touches.length === 1) { // 단일 터치만 처리
-            e.preventDefault();
-            e.stopPropagation();
-            startY = e.touches[0].clientY;
-        }
-    });
-    
-    cell.addEventListener('touchmove', e => {
-        if (e.touches.length === 1) { // 단일 터치만 처리
-            e.preventDefault();
-            e.stopPropagation();
-            const deltaY = e.touches[0].clientY - startY;
-            
-            if (deltaY < -20) {
-                number = (number + 1) % 17; // 0-16 순환
-                updateNumber();
-                startY = e.touches[0].clientY;
-            } else if (deltaY > 20) {
-                number = (number - 1 + 17) % 17; // 0-16 순환
-                updateNumber();
-                startY = e.touches[0].clientY;
-            }
-        }
-    });
-    
-    cell.addEventListener('click', e => {
-        number = (number + 1) % 17; // 0-16 순환
-        updateNumber();
-    });
-    
-    cell.addEventListener('contextmenu', e => {
-        e.preventDefault();
-        number = (number - 1 + 17) % 17; // 0-16 순환
-        updateNumber();
-    });
-    
-    cell.addEventListener('wheel', e => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.deltaY < 0) {
-            number = (number + 1) % 17; // 0-16 순환
-        } else {
-            number = (number - 1 + 17) % 17; // 0-16 순환
-        }
-        updateNumber();
-    }, { passive: false });
-});
-// 하이라이트 테이블 셀 이벤트 핸들러
-const highlightCells = document.querySelectorAll('#highlightTable .highlight-cell');
-highlightCells.forEach(cell => {
-    let number = 0;
-    let startY = 0;
-    
-    // 과착 셀인지 확인 (첫 번째 행)
-    const isFirstRow = cell.dataset.type === '과착';
-    
-    function updateNumber() {
-        cell.textContent = number;
-        hasUnsavedChanges = true; // 변경 사항 있음 표시
-        saveToServer(); // 값이 변경될 때마다 서버에 자동 저장 (디바운스 적용)
-        updateHighlights(); // 하이라이트 업데이트
-    }
-    
-    cell.addEventListener('touchstart', e => {
-        if (e.touches.length === 1) { // 단일 터치만 처리
-            e.preventDefault();
-            e.stopPropagation();
-            startY = e.touches[0].clientY;
-        }
-    });
-    
-    cell.addEventListener('touchmove', e => {
-        if (e.touches.length === 1) { // 단일 터치만 처리
-            e.preventDefault();
-            e.stopPropagation();
-            const deltaY = e.touches[0].clientY - startY;
-            
-            if (deltaY < -20) {
-                if (isFirstRow) {
-                    number = (number + 1) % 16; // 0-15 순환
-                } else {
-                    number++;
-                }
-                updateNumber();
-                startY = e.touches[0].clientY;
-            } else if (deltaY > 20) {
-                if (isFirstRow) {
-                    number = (number - 1 + 16) % 16; // 0-15 순환
-                } else {
-                    number = Math.max(0, number - 1);
-                }
-                updateNumber();
-                startY = e.touches[0].clientY;
-            }
-        }
-    });
-    
-    cell.addEventListener('click', e => {
-        if (isFirstRow) {
-            number = (number + 1) % 16; // 0-15 순환
-        } else {
-            number++;
-        }
-        updateNumber();
-    });
-    
-    cell.addEventListener('contextmenu', e => {
-        e.preventDefault();
-        if (isFirstRow) {
-            number = (number - 1 + 16) % 16; // 0-15 순환
-        } else {
-            number = Math.max(0, number - 1);
-        }
-        updateNumber();
-    });
-    
-    cell.addEventListener('wheel', e => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.deltaY < 0) {
-            if (isFirstRow) {
-                number = (number + 1) % 16; // 0-15 순환
-            } else {
-                number++;
-            }
-        } else {
-            if (isFirstRow) {
-                number = (number - 1 + 16) % 16; // 0-15 순환
-            } else {
-                number = Math.max(0, number - 1);
-            }
-        }
-        updateNumber();
-    }, { passive: false });
-});
-// Prevent page scroll when interacting with cells, but allow container scroll
-document.addEventListener('touchmove', e => {
-    if (e.touches.length === 1 && 
-        (e.target.closest('.interactive-cell') || e.target.closest('.number-only-cell') || e.target.closest('.highlight-cell')) 
-        && !e.target.closest('.table-container')) {
-        e.preventDefault();
-    }
-}, { passive: false });
-// 핀치 줌 기능 구현
-document.addEventListener('touchstart', e => {
-    if (e.touches.length === 2) {
-        e.preventDefault();
-        initialDistance = getDistance(e.touches[0], e.touches[1]);
-        initialScale = currentScale;
-    }
-}, { passive: false });
-document.addEventListener('touchmove', e => {
-    if (e.touches.length === 2) {
-        e.preventDefault();
-        const currentDistance = getDistance(e.touches[0], e.touches[1]);
-        const scale = (currentDistance / initialDistance) * initialScale;
-        
-        // 확대/축소 비율 제한 (0.1 ~ 3배) - 최소 축소 비율 0.1로 설정
-        const limitedScale = Math.min(Math.max(MIN_SCALE, scale), MAX_SCALE);
-        setAppScale(limitedScale);
-    }
-}, { passive: false });
-// 두 터치 포인트 사이의 거리 계산
-function getDistance(touch1, touch2) {
-    const dx = touch1.clientX - touch2.clientX;
-    const dy = touch1.clientY - touch2.clientY;
-    return Math.sqrt(dx * dx + dy * dy);
-}
-// 페이지 로드 시 서버에서 데이터 불러오기
-document.addEventListener('DOMContentLoaded', function() {
-    // 즉시 데이터 불러오기
-    loadFromServer();
-    
-    // 30초마다 서버에서 데이터 다시 불러오기 (다른 기기에서의 변경사항 반영)
-    setInterval(() => {
-        // 저장되지 않은 변경 사항이 있는 경우 건너뜀
-        if (hasUnsavedChanges || isSaving) return;
-        
-        // 서버에서 최신 데이터 불러오기
-        google.script.run
-            .withSuccessHandler(function(data) {
-                // 서버 데이터가 있고 현재 상태와 다른 경우에만 업데이트
-                if (data.table1 && data.table1.length > 0) {
-                    const currentDataString = JSON.stringify(lastSavedState);
-                    const serverDataString = JSON.stringify(data);
-                    
-                    if (currentDataString !== serverDataString) {
-                        // 서버 데이터로 업데이트
+                    }, 2000);
+                })
+                .saveData(data);
+        }, 300); // 디바운스 시간 300ms로 단축
+        // 서버에서 데이터 불러오기
+        function loadFromServer() {
+            updateSaveIndicator('saving');
+            showStatusMessage('데이터 불러오는 중...', false, true);
+
+            google.script.run
+                .withSuccessHandler(function (data) {
+                    let hasData = false;
+
+                    if (data.table1 && data.table1.length > 0) {
+                        hasData = true;
                         data.table1.forEach(item => {
                             const cell = document.querySelector(`#mainTable [data-row="${item.row}"][data-col="${item.col}"]`);
                             if (cell) {
                                 cell.querySelector('.cell-content').textContent = item.value;
                             }
                         });
-                        
+                    }
+
+                    if (data.table2 && data.table2.length > 0) {
+                        hasData = true;
                         data.table2.forEach(item => {
                             const cell = document.querySelector(`#mainTable2 [data-row="${item.row}"][data-col="${item.col}"]`);
                             if (cell) {
                                 cell.querySelector('.cell-content').textContent = item.value;
                             }
                         });
-                        
+                    }
+
+                    // Load highlight table data
+                    if (data.highlightTable && data.highlightTable.length > 0) {
+                        hasData = true;
                         data.highlightTable.forEach(item => {
                             const cell = document.querySelector(`#highlightTable [data-type="${item.type}"]`);
                             if (cell) {
                                 cell.textContent = item.value;
                             }
                         });
-                        
-                        // 마지막 상태 업데이트
+                    }
+
+                    // 마지막 상태 업데이트
+                    if (hasData) {
                         lastSavedState = JSON.parse(JSON.stringify(data));
-                        
-                        updateSummary();
-                        updateHighlights();
+                        // 로컬 스토리지에도 저장
+                        localStorage.setItem('TABLE_DATA_LOCAL', JSON.stringify(data));
+                    }
+
+                    updateSummary();
+                    updateHighlights(); // 하이라이트 업데이트
+                    updateSaveIndicator('success');
+                    showStatusMessage(hasData ? '데이터를 불러왔습니다.' : '저장된 데이터가 없습니다.');
+                })
+                .withFailureHandler(function (error) {
+                    updateSaveIndicator('error');
+                    showStatusMessage('불러오기 오류: ' + error.message, true);
+
+                    // 서버에서 데이터 불러오기 실패 시 로컬 스토리지에서 시도
+                    try {
+                        const localData = localStorage.getItem('TABLE_DATA_LOCAL');
+                        if (localData) {
+                            const parsedData = JSON.parse(localData);
+
+                            if (parsedData.table1 && parsedData.table1.length > 0) {
+                                parsedData.table1.forEach(item => {
+                                    const cell = document.querySelector(`#mainTable [data-row="${item.row}"][data-col="${item.col}"]`);
+                                    if (cell) {
+                                        cell.querySelector('.cell-content').textContent = item.value;
+                                    }
+                                });
+                            }
+
+                            if (parsedData.table2 && parsedData.table2.length > 0) {
+                                parsedData.table2.forEach(item => {
+                                    const cell = document.querySelector(`#mainTable2 [data-row="${item.row}"][data-col="${item.col}"]`);
+                                    if (cell) {
+                                        cell.querySelector('.cell-content').textContent = item.value;
+                                    }
+                                });
+                            }
+
+                            if (parsedData.highlightTable && parsedData.highlightTable.length > 0) {
+                                parsedData.highlightTable.forEach(item => {
+                                    const cell = document.querySelector(`#highlightTable [data-type="${item.type}"]`);
+                                    if (cell) {
+                                        cell.textContent = item.value;
+                                    }
+                                });
+                            }
+
+                            // 마지막 상태 업데이트
+                            lastSavedState = JSON.parse(JSON.stringify(parsedData));
+
+                            updateSummary();
+                            updateHighlights();
+                            showStatusMessage('로컬 데이터를 불러왔습니다.');
+                        }
+                    } catch (e) {
+                        console.error('로컬 스토리지 데이터 복원 오류:', e);
+                    }
+                })
+                .loadData();
+        }
+        // 하이라이트 업데이트 함수
+        function updateHighlights() {
+            // 모든 하이라이트 제거
+            document.querySelectorAll('.interactive-cell').forEach(cell => {
+                cell.classList.remove('highlight-blue', 'highlight-yellow', 'highlight-green', 'highlight-purple', 'highlight-black');
+            });
+
+            // 하이라이트 테이블에서 값 가져오기
+            const highlightCells = document.querySelectorAll('#highlightTable .highlight-cell');
+
+            highlightCells.forEach(cell => {
+                const type = cell.dataset.type;
+                const value = parseInt(cell.textContent);
+
+                if (value > 0) {
+                    if (type === '과착') {
+                        // 과착: 메인 테이블 홀수열에서 같은 숫자 찾아서 연한 블루로 하이라이트
+                        document.querySelectorAll('.interactive-cell').forEach(interactiveCell => {
+                            const cellValue = interactiveCell.querySelector('.cell-content').textContent;
+                            if (!isNaN(cellValue) && parseInt(cellValue) === value) {
+                                interactiveCell.classList.add('highlight-blue');
+                            }
+                        });
+                    } else {
+                        // 바코, 택오, 기타, 유통: 메인 테이블 홀수열에서 같은 글자 찾아서 해당 색으로 하이라이트
+                        document.querySelectorAll('.interactive-cell').forEach(interactiveCell => {
+                            const cellValue = interactiveCell.querySelector('.cell-content').textContent;
+                            if (cellValue === type) {
+                                if (type === '바코') {
+                                    interactiveCell.classList.add('highlight-yellow');
+                                } else if (type === '택오') {
+                                    interactiveCell.classList.add('highlight-green');
+                                } else if (type === '기타') {
+                                    interactiveCell.classList.add('highlight-purple');
+                                } else if (type === '유통') {
+                                    interactiveCell.classList.add('highlight-black');
+                                }
+                            }
+                        });
                     }
                 }
-            })
-            .loadData();
-    }, 30000); // 30초마다 실행
-    
-    // 모바일 화면에서 테이블이 모두 보이도록 초기 확대/축소 비율 설정
-    setTimeout(() => {
-        // 모바일 기기 확인
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        if (isMobile) {
-            // 테이블 전체 너비 (17 * 34px + 17 * 24px = 986px)
-            const tableWidth = 986;
-            // 뷰포트 너비
-            const viewportWidth = window.innerWidth;
-            // 필요한 확대/축소 비율 계산
-            const requiredScale = viewportWidth / tableWidth;
-            
-            // 최소 0.2, 최대 1.0 사이로 제한
-            const scale = Math.min(Math.max(requiredScale, MIN_SCALE), 1.0);
-            
-            // 확대/축소 적용
-            setAppScale(scale);
+            });
         }
-    }, 200);
+        cells.forEach(cell => {
+            let mode = 5; // Start with '-' mode (index 5)
+            let number = 0; // 홀수열은 0부터 시작
+            let startX = 0;
+            let startY = 0;
+            let isSwiping = false;
+            let isScrolling = false;
 
-    // 데스크톱 트랙패드 확대/축소(Ctrl/⌘ + 휠) 지원
-    window.addEventListener('wheel', (e) => {
-        if (e.ctrlKey || e.metaKey) {
-            e.preventDefault();
-            const delta = -e.deltaY * 0.0015; // 감도 조절
-            const next = Math.min(Math.max(MIN_SCALE, currentScale * (1 + delta)), MAX_SCALE);
-            setAppScale(next);
-        }
-    }, { passive: false });
+            const content = cell.querySelector('.cell-content');
 
-    // Safari 전용 제스처 이벤트 지원
-    document.addEventListener('gesturestart', (e) => {
-        e.preventDefault();
-        initialScale = currentScale;
-    });
-    document.addEventListener('gesturechange', (e) => {
-        e.preventDefault();
-        const next = Math.min(Math.max(MIN_SCALE, initialScale * e.scale), MAX_SCALE);
-        setAppScale(next);
-    });
-    document.addEventListener('gestureend', (e) => {
-        e.preventDefault();
-    });
-    
-    // 10초마다 자동 저장된 데이터가 있는지 확인하고 없으면 마지막 상태로 복원
-    setInterval(() => {
-        // 저장되지 않은 변경 사항이 있는 경우 건너뜀
-        if (hasUnsavedChanges) return;
-        
-        const data = {
-            table1: [],
-            table2: [],
-            highlightTable: []
-        };
-        
-        // 현재 테이블 데이터 수집
-        document.querySelectorAll('#mainTable .interactive-cell, #mainTable .number-only-cell').forEach(cell => {
-            data.table1.push({
-                row: cell.dataset.row,
-                col: cell.dataset.col,
-                value: cell.querySelector('.cell-content').textContent
-            });
-        });
-        
-        document.querySelectorAll('#mainTable2 .interactive-cell, #mainTable2 .number-only-cell').forEach(cell => {
-            data.table2.push({
-                row: cell.dataset.row,
-                col: cell.dataset.col,
-                value: cell.querySelector('.cell-content').textContent
-            });
-        });
-        
-        // 하이라이트 테이블 데이터 수집
-        document.querySelectorAll('#highlightTable .highlight-cell').forEach(cell => {
-            data.highlightTable.push({
-                type: cell.dataset.type,
-                value: cell.textContent
-            });
-        });
-        
-        // 현재 데이터와 마지막 저장된 데이터 비교
-        const currentDataString = JSON.stringify(data);
-        const lastSavedDataString = JSON.stringify(lastSavedState);
-        
-        if (currentDataString !== lastSavedDataString && lastSavedState.table1.length > 0) {
-            // 데이터가 다르면 마지막 저장된 상태로 복원 (메시지 없이)
-            if (lastSavedState.table1) {
-                lastSavedState.table1.forEach(item => {
-                    const cell = document.querySelector(`#mainTable [data-row="${item.row}"][data-col="${item.col}"]`);
-                    if (cell) {
-                        cell.querySelector('.cell-content').textContent = item.value;
-                    }
-                });
+            function updateDisplay() {
+                if (modes[mode] === '과착') { // "숫자"를 "과착"으로 변경
+                    content.textContent = number;
+                } else {
+                    content.textContent = modes[mode];
+                }
+                updateSummary();
+                hasUnsavedChanges = true; // 변경 사항 있음 표시
+                saveToServer(); // 값이 변경될 때마다 서버에 자동 저장 (디바운스 적용)
+                updateHighlights(); // 하이라이트 업데이트
             }
-            
-            if (lastSavedState.table2) {
-                lastSavedState.table2.forEach(item => {
-                    const cell = document.querySelector(`#mainTable2 [data-row="${item.row}"][data-col="${item.col}"]`);
-                    if (cell) {
-                        cell.querySelector('.cell-content').textContent = item.value;
+
+            cell.addEventListener('touchstart', e => {
+                if (e.touches.length === 1) { // 단일 터치만 처리
+                    e.preventDefault();
+                    e.stopPropagation();
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                    isSwiping = false;
+                    isScrolling = false;
+                }
+            });
+
+            cell.addEventListener('touchmove', e => {
+                if (e.touches.length === 1) { // 단일 터치만 처리
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const deltaX = e.touches[0].clientX - startX;
+                    const deltaY = e.touches[0].clientY - startY;
+
+                    if (!isSwiping && !isScrolling) {
+                        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+                            isSwiping = true;
+                        } else if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 10) {
+                            isScrolling = true;
+                        }
                     }
-                });
-            }
-            
-            if (lastSavedState.highlightTable) {
-                lastSavedState.highlightTable.forEach(item => {
-                    const cell = document.querySelector(`#highlightTable [data-type="${item.type}"]`);
-                    if (cell) {
-                        cell.textContent = item.value;
+
+                    if (isSwiping && Math.abs(deltaX) > 30) {
+                        mode = (mode + 1) % modes.length;
+                        updateDisplay();
+                        isSwiping = false;
+                        startX = e.touches[0].clientX;
                     }
-                });
+
+                    if (isScrolling && modes[mode] === '과착') { // "숫자"를 "과착"으로 변경
+                        if (deltaY < -20) {
+                            number = (number + 1) % 32; // 0-31 순환
+                            updateDisplay();
+                            startY = e.touches[0].clientY;
+                        } else if (deltaY > 20) {
+                            number = (number - 1 + 32) % 32; // 0-31 순환
+                            updateDisplay();
+                            startY = e.touches[0].clientY;
+                        }
+                    }
+                }
+            });
+
+            cell.addEventListener('click', e => {
+                // 마우스 클릭 시 모드 변경 (전체 셀 영역)
+                mode = (mode + 1) % modes.length;
+                updateDisplay();
+            });
+
+            cell.addEventListener('contextmenu', e => {
+                e.preventDefault();
+                if (modes[mode] === '과착') { // "숫자"를 "과착"으로 변경
+                    number = (number - 1 + 32) % 32; // 0-31 순환
+                    updateDisplay();
+                }
+            });
+
+            cell.addEventListener('wheel', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (modes[mode] === '과착') { // "숫자"를 "과착"으로 변경
+                    if (e.deltaY < 0) {
+                        number = (number + 1) % 32; // 0-31 순환
+                    } else {
+                        number = (number - 1 + 32) % 32; // 0-31 순환
+                    }
+                    updateDisplay();
+                }
+            }, { passive: false });
+
+            updateDisplay();
+        });
+        // Initialize summary on load
+        updateSummary();
+        // Number-only cells (even columns: 2, 4, 6, 8, 10, 12, 14, 16)
+        const numberCells = document.querySelectorAll('.number-only-cell');
+        numberCells.forEach(cell => {
+            let number = 0;
+            let startY = 0;
+
+            const content = cell.querySelector('.cell-content');
+
+            function updateNumber() {
+                content.textContent = number;
+                hasUnsavedChanges = true; // 변경 사항 있음 표시
+                saveToServer(); // 값이 변경될 때마다 서버에 자동 저장 (디바운스 적용)
             }
-            
-            updateSummary();
-            updateHighlights(); // 하이라이트 업데이트
+
+            cell.addEventListener('touchstart', e => {
+                if (e.touches.length === 1) { // 단일 터치만 처리
+                    e.preventDefault();
+                    e.stopPropagation();
+                    startY = e.touches[0].clientY;
+                }
+            });
+
+            cell.addEventListener('touchmove', e => {
+                if (e.touches.length === 1) { // 단일 터치만 처리
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const deltaY = e.touches[0].clientY - startY;
+
+                    if (deltaY < -20) {
+                        number = (number + 1) % 17; // 0-16 순환
+                        updateNumber();
+                        startY = e.touches[0].clientY;
+                    } else if (deltaY > 20) {
+                        number = (number - 1 + 17) % 17; // 0-16 순환
+                        updateNumber();
+                        startY = e.touches[0].clientY;
+                    }
+                }
+            });
+
+            cell.addEventListener('click', e => {
+                number = (number + 1) % 17; // 0-16 순환
+                updateNumber();
+            });
+
+            cell.addEventListener('contextmenu', e => {
+                e.preventDefault();
+                number = (number - 1 + 17) % 17; // 0-16 순환
+                updateNumber();
+            });
+
+            cell.addEventListener('wheel', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.deltaY < 0) {
+                    number = (number + 1) % 17; // 0-16 순환
+                } else {
+                    number = (number - 1 + 17) % 17; // 0-16 순환
+                }
+                updateNumber();
+            }, { passive: false });
+        });
+        // 하이라이트 테이블 셀 이벤트 핸들러
+        const highlightCells = document.querySelectorAll('#highlightTable .highlight-cell');
+        highlightCells.forEach(cell => {
+            let number = 0;
+            let startY = 0;
+
+            // 과착 셀인지 확인 (첫 번째 행)
+            const isFirstRow = cell.dataset.type === '과착';
+
+            function updateNumber() {
+                cell.textContent = number;
+                hasUnsavedChanges = true; // 변경 사항 있음 표시
+                saveToServer(); // 값이 변경될 때마다 서버에 자동 저장 (디바운스 적용)
+                updateHighlights(); // 하이라이트 업데이트
+            }
+
+            cell.addEventListener('touchstart', e => {
+                if (e.touches.length === 1) { // 단일 터치만 처리
+                    e.preventDefault();
+                    e.stopPropagation();
+                    startY = e.touches[0].clientY;
+                }
+            });
+
+            cell.addEventListener('touchmove', e => {
+                if (e.touches.length === 1) { // 단일 터치만 처리
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const deltaY = e.touches[0].clientY - startY;
+
+                    if (deltaY < -20) {
+                        if (isFirstRow) {
+                            number = (number + 1) % 16; // 0-15 순환
+                        } else {
+                            number++;
+                        }
+                        updateNumber();
+                        startY = e.touches[0].clientY;
+                    } else if (deltaY > 20) {
+                        if (isFirstRow) {
+                            number = (number - 1 + 16) % 16; // 0-15 순환
+                        } else {
+                            number = Math.max(0, number - 1);
+                        }
+                        updateNumber();
+                        startY = e.touches[0].clientY;
+                    }
+                }
+            });
+
+            cell.addEventListener('click', e => {
+                if (isFirstRow) {
+                    number = (number + 1) % 16; // 0-15 순환
+                } else {
+                    number++;
+                }
+                updateNumber();
+            });
+
+            cell.addEventListener('contextmenu', e => {
+                e.preventDefault();
+                if (isFirstRow) {
+                    number = (number - 1 + 16) % 16; // 0-15 순환
+                } else {
+                    number = Math.max(0, number - 1);
+                }
+                updateNumber();
+            });
+
+            cell.addEventListener('wheel', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.deltaY < 0) {
+                    if (isFirstRow) {
+                        number = (number + 1) % 16; // 0-15 순환
+                    } else {
+                        number++;
+                    }
+                } else {
+                    if (isFirstRow) {
+                        number = (number - 1 + 16) % 16; // 0-15 순환
+                    } else {
+                        number = Math.max(0, number - 1);
+                    }
+                }
+                updateNumber();
+            }, { passive: false });
+        });
+        // Prevent page scroll when interacting with cells, but allow container scroll
+        document.addEventListener('touchmove', e => {
+            if (e.touches.length === 1 &&
+                (e.target.closest('.interactive-cell') || e.target.closest('.number-only-cell') || e.target.closest('.highlight-cell'))
+                && !e.target.closest('.table-container')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        // 핀치 줌 기능 구현
+        document.addEventListener('touchstart', e => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                initialDistance = getDistance(e.touches[0], e.touches[1]);
+                initialScale = currentScale;
+            }
+        }, { passive: false });
+        document.addEventListener('touchmove', e => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const currentDistance = getDistance(e.touches[0], e.touches[1]);
+                const scale = (currentDistance / initialDistance) * initialScale;
+
+                // 확대/축소 비율 제한 (0.1 ~ 3배) - 최소 축소 비율 0.1로 설정
+                const limitedScale = Math.min(Math.max(MIN_SCALE, scale), MAX_SCALE);
+                setAppScale(limitedScale);
+            }
+        }, { passive: false });
+        // 두 터치 포인트 사이의 거리 계산
+        function getDistance(touch1, touch2) {
+            const dx = touch1.clientX - touch2.clientX;
+            const dy = touch1.clientY - touch2.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
         }
-    }, 10000); // 10초마다 실행
-});
-// 페이지가 닫히기 전에 마지막으로 저장
-window.addEventListener('beforeunload', function() {
-    // 디바운스된 함수 즉시 실행
-    saveToServer.flush();
-    
-    // 현재 데이터를 로컬 스토리지에 저장 (백업)
-    const data = {
-        table1: [],
-        table2: [],
-        highlightTable: []
-    };
-    
-    // Collect data from both tables
-    document.querySelectorAll('#mainTable .interactive-cell, #mainTable .number-only-cell').forEach(cell => {
-        data.table1.push({
-            row: cell.dataset.row,
-            col: cell.dataset.col,
-            value: cell.querySelector('.cell-content').textContent
+        // 페이지 로드 시 서버에서 데이터 불러오기
+        document.addEventListener('DOMContentLoaded', function () {
+            // 즉시 데이터 불러오기
+            loadFromServer();
+
+            // 30초마다 서버에서 데이터 다시 불러오기 (다른 기기에서의 변경사항 반영)
+            setInterval(() => {
+                // 저장되지 않은 변경 사항이 있는 경우 건너뜀
+                if (hasUnsavedChanges || isSaving) return;
+
+                // 서버에서 최신 데이터 불러오기
+                google.script.run
+                    .withSuccessHandler(function (data) {
+                        // 서버 데이터가 있고 현재 상태와 다른 경우에만 업데이트
+                        if (data.table1 && data.table1.length > 0) {
+                            const currentDataString = JSON.stringify(lastSavedState);
+                            const serverDataString = JSON.stringify(data);
+
+                            if (currentDataString !== serverDataString) {
+                                // 서버 데이터로 업데이트
+                                data.table1.forEach(item => {
+                                    const cell = document.querySelector(`#mainTable [data-row="${item.row}"][data-col="${item.col}"]`);
+                                    if (cell) {
+                                        cell.querySelector('.cell-content').textContent = item.value;
+                                    }
+                                });
+
+                                data.table2.forEach(item => {
+                                    const cell = document.querySelector(`#mainTable2 [data-row="${item.row}"][data-col="${item.col}"]`);
+                                    if (cell) {
+                                        cell.querySelector('.cell-content').textContent = item.value;
+                                    }
+                                });
+
+                                data.highlightTable.forEach(item => {
+                                    const cell = document.querySelector(`#highlightTable [data-type="${item.type}"]`);
+                                    if (cell) {
+                                        cell.textContent = item.value;
+                                    }
+                                });
+
+                                // 마지막 상태 업데이트
+                                lastSavedState = JSON.parse(JSON.stringify(data));
+
+                                updateSummary();
+                                updateHighlights();
+                            }
+                        }
+                    })
+                    .loadData();
+            }, 30000); // 30초마다 실행
+
+            // 모바일 화면에서 테이블이 모두 보이도록 초기 확대/축소 비율 설정
+            setTimeout(() => {
+                // 모바일 기기 확인
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+                if (isMobile) {
+                    // 테이블 전체 너비 (17 * 34px + 17 * 24px = 986px)
+                    const tableWidth = 986;
+                    // 뷰포트 너비
+                    const viewportWidth = window.innerWidth;
+                    // 필요한 확대/축소 비율 계산
+                    const requiredScale = viewportWidth / tableWidth;
+
+                    // 최소 0.2, 최대 1.0 사이로 제한
+                    const scale = Math.min(Math.max(requiredScale, MIN_SCALE), 1.0);
+
+                    // 확대/축소 적용
+                    setAppScale(scale);
+                }
+            }, 200);
+
+            // 데스크톱 트랙패드 확대/축소(Ctrl/⌘ + 휠) 지원
+            window.addEventListener('wheel', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    const delta = -e.deltaY * 0.0015; // 감도 조절
+                    const next = Math.min(Math.max(MIN_SCALE, currentScale * (1 + delta)), MAX_SCALE);
+                    setAppScale(next);
+                }
+            }, { passive: false });
+
+            // Safari 전용 제스처 이벤트 지원
+            document.addEventListener('gesturestart', (e) => {
+                e.preventDefault();
+                initialScale = currentScale;
+            });
+            document.addEventListener('gesturechange', (e) => {
+                e.preventDefault();
+                const next = Math.min(Math.max(MIN_SCALE, initialScale * e.scale), MAX_SCALE);
+                setAppScale(next);
+            });
+            document.addEventListener('gestureend', (e) => {
+                e.preventDefault();
+            });
+
+            // 10초마다 자동 저장된 데이터가 있는지 확인하고 없으면 마지막 상태로 복원
+            setInterval(() => {
+                // 저장되지 않은 변경 사항이 있는 경우 건너뜀
+                if (hasUnsavedChanges) return;
+
+                const data = {
+                    table1: [],
+                    table2: [],
+                    highlightTable: []
+                };
+
+                // 현재 테이블 데이터 수집
+                document.querySelectorAll('#mainTable .interactive-cell, #mainTable .number-only-cell').forEach(cell => {
+                    data.table1.push({
+                        row: cell.dataset.row,
+                        col: cell.dataset.col,
+                        value: cell.querySelector('.cell-content').textContent
+                    });
+                });
+
+                document.querySelectorAll('#mainTable2 .interactive-cell, #mainTable2 .number-only-cell').forEach(cell => {
+                    data.table2.push({
+                        row: cell.dataset.row,
+                        col: cell.dataset.col,
+                        value: cell.querySelector('.cell-content').textContent
+                    });
+                });
+
+                // 하이라이트 테이블 데이터 수집
+                document.querySelectorAll('#highlightTable .highlight-cell').forEach(cell => {
+                    data.highlightTable.push({
+                        type: cell.dataset.type,
+                        value: cell.textContent
+                    });
+                });
+
+                // 현재 데이터와 마지막 저장된 데이터 비교
+                const currentDataString = JSON.stringify(data);
+                const lastSavedDataString = JSON.stringify(lastSavedState);
+
+                if (currentDataString !== lastSavedDataString && lastSavedState.table1.length > 0) {
+                    // 데이터가 다르면 마지막 저장된 상태로 복원 (메시지 없이)
+                    if (lastSavedState.table1) {
+                        lastSavedState.table1.forEach(item => {
+                            const cell = document.querySelector(`#mainTable [data-row="${item.row}"][data-col="${item.col}"]`);
+                            if (cell) {
+                                cell.querySelector('.cell-content').textContent = item.value;
+                            }
+                        });
+                    }
+
+                    if (lastSavedState.table2) {
+                        lastSavedState.table2.forEach(item => {
+                            const cell = document.querySelector(`#mainTable2 [data-row="${item.row}"][data-col="${item.col}"]`);
+                            if (cell) {
+                                cell.querySelector('.cell-content').textContent = item.value;
+                            }
+                        });
+                    }
+
+                    if (lastSavedState.highlightTable) {
+                        lastSavedState.highlightTable.forEach(item => {
+                            const cell = document.querySelector(`#highlightTable [data-type="${item.type}"]`);
+                            if (cell) {
+                                cell.textContent = item.value;
+                            }
+                        });
+                    }
+
+                    updateSummary();
+                    updateHighlights(); // 하이라이트 업데이트
+                }
+            }, 10000); // 10초마다 실행
         });
-    });
-    
-    document.querySelectorAll('#mainTable2 .interactive-cell, #mainTable2 .number-only-cell').forEach(cell => {
-        data.table2.push({
-            row: cell.dataset.row,
-            col: cell.dataset.col,
-            value: cell.querySelector('.cell-content').textContent
+        // 페이지가 닫히기 전에 마지막으로 저장
+        window.addEventListener('beforeunload', function () {
+            // 디바운스된 함수 즉시 실행
+            saveToServer.flush();
+
+            // 현재 데이터를 로컬 스토리지에 저장 (백업)
+            const data = {
+                table1: [],
+                table2: [],
+                highlightTable: []
+            };
+
+            // Collect data from both tables
+            document.querySelectorAll('#mainTable .interactive-cell, #mainTable .number-only-cell').forEach(cell => {
+                data.table1.push({
+                    row: cell.dataset.row,
+                    col: cell.dataset.col,
+                    value: cell.querySelector('.cell-content').textContent
+                });
+            });
+
+            document.querySelectorAll('#mainTable2 .interactive-cell, #mainTable2 .number-only-cell').forEach(cell => {
+                data.table2.push({
+                    row: cell.dataset.row,
+                    col: cell.dataset.col,
+                    value: cell.querySelector('.cell-content').textContent
+                });
+            });
+
+            // Collect data from highlight table
+            document.querySelectorAll('#highlightTable .highlight-cell').forEach(cell => {
+                data.highlightTable.push({
+                    type: cell.dataset.type,
+                    value: cell.textContent
+                });
+            });
+
+            // 로컬 스토리지에 저장 (백업)
+            localStorage.setItem('TABLE_DATA_LOCAL', JSON.stringify(data));
         });
-    });
-    
-    // Collect data from highlight table
-    document.querySelectorAll('#highlightTable .highlight-cell').forEach(cell => {
-        data.highlightTable.push({
-            type: cell.dataset.type,
-            value: cell.textContent
-        });
-    });
-    
-    // 로컬 스토리지에 저장 (백업)
-    localStorage.setItem('TABLE_DATA_LOCAL', JSON.stringify(data));
-});
-</script>
+    </script>
 </body>
+
 </html>
