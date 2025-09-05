@@ -586,9 +586,11 @@
                 .saveData(data);
         }, 300); // 디바운스 시간 300ms로 단축
         // 서버에서 데이터 불러오기
-        function loadFromServer() {
-            updateSaveIndicator('saving');
-            showStatusMessage('데이터 불러오는 중...', false, true);
+        function loadFromServer(showMessage = true) {
+            if (showMessage) {
+                updateSaveIndicator('saving');
+                showStatusMessage('데이터 불러오는 중...', false, true);
+            }
 
             google.script.run
                 .withSuccessHandler(function (data) {
@@ -596,90 +598,33 @@
 
                     if (data.table1 && data.table1.length > 0) {
                         hasData = true;
-                        data.table1.forEach(item => {
-                            const cell = document.querySelector(`#mainTable [data-row="${item.row}"][data-col="${item.col}"]`);
-                            if (cell) {
-                                cell.querySelector('.cell-content').textContent = item.value;
-                            }
-                        });
-                    }
-
-                    if (data.table2 && data.table2.length > 0) {
-                        hasData = true;
-                        data.table2.forEach(item => {
-                            const cell = document.querySelector(`#mainTable2 [data-row="${item.row}"][data-col="${item.col}"]`);
-                            if (cell) {
-                                cell.querySelector('.cell-content').textContent = item.value;
-                            }
-                        });
-                    }
-
-                    // Load highlight table data
-                    if (data.highlightTable && data.highlightTable.length > 0) {
-                        hasData = true;
-                        data.highlightTable.forEach(item => {
-                            const cell = document.querySelector(`#highlightTable [data-type="${item.type}"]`);
-                            if (cell) {
-                                cell.textContent = item.value;
-                            }
-                        });
-                    }
-
-                    // 마지막 상태 업데이트
-                    if (hasData) {
-                        lastSavedState = JSON.parse(JSON.stringify(data));
+                        syncWithServerData(data);
+                        
                         // 로컬 스토리지에도 저장
                         localStorage.setItem('TABLE_DATA_LOCAL', JSON.stringify(data));
                     }
 
-                    updateSummary();
-                    updateHighlights(); // 하이라이트 업데이트
-                    updateSaveIndicator('success');
-                    showStatusMessage(hasData ? '데이터를 불러왔습니다.' : '저장된 데이터가 없습니다.');
+                    if (showMessage) {
+                        updateSaveIndicator('success');
+                        showStatusMessage(hasData ? '데이터를 불러왔습니다.' : '저장된 데이터가 없습니다.');
+                    }
                 })
                 .withFailureHandler(function (error) {
-                    updateSaveIndicator('error');
-                    showStatusMessage('불러오기 오류: ' + error.message, true);
+                    if (showMessage) {
+                        updateSaveIndicator('error');
+                        showStatusMessage('불러오기 오류: ' + error.message, true);
+                    }
 
                     // 서버에서 데이터 불러오기 실패 시 로컬 스토리지에서 시도
                     try {
                         const localData = localStorage.getItem('TABLE_DATA_LOCAL');
                         if (localData) {
                             const parsedData = JSON.parse(localData);
-
-                            if (parsedData.table1 && parsedData.table1.length > 0) {
-                                parsedData.table1.forEach(item => {
-                                    const cell = document.querySelector(`#mainTable [data-row="${item.row}"][data-col="${item.col}"]`);
-                                    if (cell) {
-                                        cell.querySelector('.cell-content').textContent = item.value;
-                                    }
-                                });
+                            syncWithServerData(parsedData);
+                            
+                            if (showMessage) {
+                                showStatusMessage('로컬 데이터를 불러왔습니다.');
                             }
-
-                            if (parsedData.table2 && parsedData.table2.length > 0) {
-                                parsedData.table2.forEach(item => {
-                                    const cell = document.querySelector(`#mainTable2 [data-row="${item.row}"][data-col="${item.col}"]`);
-                                    if (cell) {
-                                        cell.querySelector('.cell-content').textContent = item.value;
-                                    }
-                                });
-                            }
-
-                            if (parsedData.highlightTable && parsedData.highlightTable.length > 0) {
-                                parsedData.highlightTable.forEach(item => {
-                                    const cell = document.querySelector(`#highlightTable [data-type="${item.type}"]`);
-                                    if (cell) {
-                                        cell.textContent = item.value;
-                                    }
-                                });
-                            }
-
-                            // 마지막 상태 업데이트
-                            lastSavedState = JSON.parse(JSON.stringify(parsedData));
-
-                            updateSummary();
-                            updateHighlights();
-                            showStatusMessage('로컬 데이터를 불러왔습니다.');
                         }
                     } catch (e) {
                         console.error('로컬 스토리지 데이터 복원 오류:', e);
@@ -1015,7 +960,7 @@
                 e.stopPropagation();
                 initialDistance = getDistance(e.touches[0], e.touches[1]);
                 initialScale = currentScale;
-                
+
                 // 두 터치 포인트의 중심점 계산
                 initialCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 initialCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
@@ -1027,26 +972,26 @@
                 // 두 손가락 터치 시 핀치 줌 및 이동 실행 (테이블 내부에서도)
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 // 줌 계산
                 const currentDistance = getDistance(e.touches[0], e.touches[1]);
                 const scale = (currentDistance / initialDistance) * initialScale;
-                
+
                 // 확대/축소 비율 제한 (0.1 ~ 3배) - 최소 축소 비율 0.1로 설정
                 const limitedScale = Math.min(Math.max(MIN_SCALE, scale), MAX_SCALE);
-                
+
                 // 이동 계산
                 const currentCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 const currentCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
                 const deltaX = currentCenterX - initialCenterX;
                 const deltaY = currentCenterY - initialCenterY;
-                
+
                 // 스케일과 이동을 동시에 적용
                 currentScale = limitedScale;
                 currentTranslateX += deltaX;
                 currentTranslateY += deltaY;
                 updateTransform();
-                
+
                 // 다음 프레임을 위한 초기값 업데이트
                 initialCenterX = currentCenterX;
                 initialCenterY = currentCenterY;
@@ -1064,57 +1009,130 @@
             const dy = touch1.clientY - touch2.clientY;
             return Math.sqrt(dx * dx + dy * dy);
         }
+
+        // 현재 테이블 데이터 수집
+        function getCurrentTableData() {
+            const data = {
+                table1: [],
+                table2: [],
+                highlightTable: []
+            };
+            
+            // Collect data from both tables
+            document.querySelectorAll('#mainTable .interactive-cell, #mainTable .number-only-cell').forEach(cell => {
+                data.table1.push({
+                    row: cell.dataset.row,
+                    col: cell.dataset.col,
+                    value: cell.querySelector('.cell-content').textContent
+                });
+            });
+            
+            document.querySelectorAll('#mainTable2 .interactive-cell, #mainTable2 .number-only-cell').forEach(cell => {
+                data.table2.push({
+                    row: cell.dataset.row,
+                    col: cell.dataset.col,
+                    value: cell.querySelector('.cell-content').textContent
+                });
+            });
+            
+            // Collect data from highlight table
+            document.querySelectorAll('#highlightTable .highlight-cell').forEach(cell => {
+                data.highlightTable.push({
+                    type: cell.dataset.type,
+                    value: cell.textContent
+                });
+            });
+            
+            return data;
+        }
+
+        // 서버 데이터로 동기화
+        function syncWithServerData(data) {
+            // 서버 데이터로 업데이트
+            if (data.table1 && data.table1.length > 0) {
+                data.table1.forEach(item => {
+                    const cell = document.querySelector(`#mainTable [data-row="${item.row}"][data-col="${item.col}"]`);
+                    if (cell) {
+                        cell.querySelector('.cell-content').textContent = item.value;
+                    }
+                });
+            }
+
+            if (data.table2 && data.table2.length > 0) {
+                data.table2.forEach(item => {
+                    const cell = document.querySelector(`#mainTable2 [data-row="${item.row}"][data-col="${item.col}"]`);
+                    if (cell) {
+                        cell.querySelector('.cell-content').textContent = item.value;
+                    }
+                });
+            }
+
+            if (data.highlightTable && data.highlightTable.length > 0) {
+                data.highlightTable.forEach(item => {
+                    const cell = document.querySelector(`#highlightTable [data-type="${item.type}"]`);
+                    if (cell) {
+                        cell.textContent = item.value;
+                    }
+                });
+            }
+
+            // 마지막 상태 업데이트
+            lastSavedState = JSON.parse(JSON.stringify(data));
+            hasUnsavedChanges = false; // 동기화 완료로 변경사항 없음 표시
+
+            updateSummary();
+            updateHighlights();
+        }
         // 페이지 로드 시 서버에서 데이터 불러오기
         document.addEventListener('DOMContentLoaded', function () {
             // 즉시 데이터 불러오기
             loadFromServer();
 
-            // 30초마다 서버에서 데이터 다시 불러오기 (다른 기기에서의 변경사항 반영)
+            // 10초마다 서버에서 데이터 다시 불러오기 (다른 기기에서의 변경사항 반영)
             setInterval(() => {
-                // 저장되지 않은 변경 사항이 있는 경우 건너뜀
-                if (hasUnsavedChanges || isSaving) return;
+                // 저장 중인 경우에만 건너뜀
+                if (isSaving) return;
 
                 // 서버에서 최신 데이터 불러오기
                 google.script.run
                     .withSuccessHandler(function (data) {
-                        // 서버 데이터가 있고 현재 상태와 다른 경우에만 업데이트
+                        // 서버 데이터가 있는 경우
                         if (data.table1 && data.table1.length > 0) {
                             const currentDataString = JSON.stringify(lastSavedState);
                             const serverDataString = JSON.stringify(data);
 
                             if (currentDataString !== serverDataString) {
-                                // 서버 데이터로 업데이트
-                                data.table1.forEach(item => {
-                                    const cell = document.querySelector(`#mainTable [data-row="${item.row}"][data-col="${item.col}"]`);
-                                    if (cell) {
-                                        cell.querySelector('.cell-content').textContent = item.value;
-                                    }
-                                });
-
-                                data.table2.forEach(item => {
-                                    const cell = document.querySelector(`#mainTable2 [data-row="${item.row}"][data-col="${item.col}"]`);
-                                    if (cell) {
-                                        cell.querySelector('.cell-content').textContent = item.value;
-                                    }
-                                });
-
-                                data.highlightTable.forEach(item => {
-                                    const cell = document.querySelector(`#highlightTable [data-type="${item.type}"]`);
-                                    if (cell) {
-                                        cell.textContent = item.value;
-                                    }
-                                });
-
-                                // 마지막 상태 업데이트
-                                lastSavedState = JSON.parse(JSON.stringify(data));
-
-                                updateSummary();
-                                updateHighlights();
+                                // 현재 데이터와 서버 데이터 비교하여 충돌 해결
+                                const currentData = getCurrentTableData();
+                                const currentDataString2 = JSON.stringify(currentData);
+                                
+                                // 현재 데이터가 서버 데이터와 다르고, 저장되지 않은 변경사항이 있는 경우
+                                if (currentDataString2 !== serverDataString && hasUnsavedChanges) {
+                                    // 사용자에게 충돌 알림
+                                    showStatusMessage('다른 기기에서 변경된 데이터가 있습니다. 서버 데이터로 동기화합니다.', false);
+                                    
+                                    // 현재 변경사항을 먼저 저장 시도
+                                    saveToServer();
+                                    
+                                    // 잠시 후 서버 데이터로 동기화
+                                    setTimeout(() => {
+                                        syncWithServerData(data);
+                                    }, 1000);
+                                } else {
+                                    // 서버 데이터로 동기화
+                                    syncWithServerData(data);
+                                }
                             }
+                        } else if (hasUnsavedChanges) {
+                            // 서버에 데이터가 없고 현재 변경사항이 있는 경우 저장
+                            saveToServer();
                         }
                     })
+                    .withFailureHandler(function(error) {
+                        console.log('서버 동기화 실패:', error);
+                    })
                     .loadData();
-            }, 30000); // 30초마다 실행
+            }, 10000); // 10초마다 실행 (더 자주 동기화)
 
             // 모바일 화면에서 테이블이 모두 보이도록 초기 확대/축소 비율 설정
             setTimeout(() => {
@@ -1161,79 +1179,15 @@
                 e.preventDefault();
             });
 
-            // 10초마다 자동 저장된 데이터가 있는지 확인하고 없으면 마지막 상태로 복원
-            setInterval(() => {
-                // 저장되지 않은 변경 사항이 있는 경우 건너뜀
-                if (hasUnsavedChanges) return;
-
-                const data = {
-                    table1: [],
-                    table2: [],
-                    highlightTable: []
-                };
-
-                // 현재 테이블 데이터 수집
-                document.querySelectorAll('#mainTable .interactive-cell, #mainTable .number-only-cell').forEach(cell => {
-                    data.table1.push({
-                        row: cell.dataset.row,
-                        col: cell.dataset.col,
-                        value: cell.querySelector('.cell-content').textContent
-                    });
-                });
-
-                document.querySelectorAll('#mainTable2 .interactive-cell, #mainTable2 .number-only-cell').forEach(cell => {
-                    data.table2.push({
-                        row: cell.dataset.row,
-                        col: cell.dataset.col,
-                        value: cell.querySelector('.cell-content').textContent
-                    });
-                });
-
-                // 하이라이트 테이블 데이터 수집
-                document.querySelectorAll('#highlightTable .highlight-cell').forEach(cell => {
-                    data.highlightTable.push({
-                        type: cell.dataset.type,
-                        value: cell.textContent
-                    });
-                });
-
-                // 현재 데이터와 마지막 저장된 데이터 비교
-                const currentDataString = JSON.stringify(data);
-                const lastSavedDataString = JSON.stringify(lastSavedState);
-
-                if (currentDataString !== lastSavedDataString && lastSavedState.table1.length > 0) {
-                    // 데이터가 다르면 마지막 저장된 상태로 복원 (메시지 없이)
-                    if (lastSavedState.table1) {
-                        lastSavedState.table1.forEach(item => {
-                            const cell = document.querySelector(`#mainTable [data-row="${item.row}"][data-col="${item.col}"]`);
-                            if (cell) {
-                                cell.querySelector('.cell-content').textContent = item.value;
-                            }
-                        });
-                    }
-
-                    if (lastSavedState.table2) {
-                        lastSavedState.table2.forEach(item => {
-                            const cell = document.querySelector(`#mainTable2 [data-row="${item.row}"][data-col="${item.col}"]`);
-                            if (cell) {
-                                cell.querySelector('.cell-content').textContent = item.value;
-                            }
-                        });
-                    }
-
-                    if (lastSavedState.highlightTable) {
-                        lastSavedState.highlightTable.forEach(item => {
-                            const cell = document.querySelector(`#highlightTable [data-type="${item.type}"]`);
-                            if (cell) {
-                                cell.textContent = item.value;
-                            }
-                        });
-                    }
-
-                    updateSummary();
-                    updateHighlights(); // 하이라이트 업데이트
+            // 페이지 가시성 변경 시 동기화 (다른 탭에서 돌아올 때)
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden && !isSaving) {
+                    // 페이지가 다시 보이면 서버에서 최신 데이터 확인 (메시지 없이)
+                    setTimeout(() => {
+                        loadFromServer(false);
+                    }, 500);
                 }
-            }, 10000); // 10초마다 실행
+            });
         });
         // 페이지가 닫히기 전에 마지막으로 저장
         window.addEventListener('beforeunload', function () {
