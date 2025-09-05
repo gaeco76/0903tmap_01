@@ -354,18 +354,32 @@
             table2: [],
             highlightTable: []
         };
-        // 핀치 줌 관련 변수
+        // 핀치 줌 및 이동 관련 변수
         let initialDistance = 0;
         let initialScale = 1;
         let currentScale = 1;
+        let initialCenterX = 0;
+        let initialCenterY = 0;
+        let currentTranslateX = 0;
+        let currentTranslateY = 0;
         const MIN_SCALE = 0.1;
         const MAX_SCALE = 3;
 
         function setAppScale(scale) {
             currentScale = scale;
+            updateTransform();
+        }
+
+        function setAppTranslate(x, y) {
+            currentTranslateX = x;
+            currentTranslateY = y;
+            updateTransform();
+        }
+
+        function updateTransform() {
             const root = document.getElementById('appRoot');
             if (root) {
-                root.style.transform = 'scale(' + currentScale + ')';
+                root.style.transform = `translate(${currentTranslateX}px, ${currentTranslateY}px) scale(${currentScale})`;
             }
         }
         // 저장 상태 추적 변수
@@ -758,7 +772,7 @@
                     e.stopPropagation();
                     const deltaX = e.touches[0].clientX - startX;
                     const deltaY = e.touches[0].clientY - startY;
-                    
+
                     if (!isSwiping && !isScrolling) {
                         if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
                             isSwiping = true;
@@ -766,14 +780,14 @@
                             isScrolling = true;
                         }
                     }
-                    
+
                     if (isSwiping && Math.abs(deltaX) > 30) {
                         mode = (mode + 1) % modes.length;
                         updateDisplay();
                         isSwiping = false;
                         startX = e.touches[0].clientX;
                     }
-                    
+
                     if (isScrolling && modes[mode] === '과착') { // "숫자"를 "과착"으로 변경
                         if (deltaY < -20) {
                             number = (number + 1) % 32; // 0-31 순환
@@ -827,15 +841,15 @@
         numberCells.forEach(cell => {
             let number = 0;
             let startY = 0;
-            
+
             const content = cell.querySelector('.cell-content');
-            
+
             function updateNumber() {
                 content.textContent = number;
                 hasUnsavedChanges = true; // 변경 사항 있음 표시
                 saveToServer(); // 값이 변경될 때마다 서버에 자동 저장 (디바운스 적용)
             }
-            
+
             cell.addEventListener('touchstart', e => {
                 if (e.touches.length === 1) { // 단일 터치만 처리
                     e.preventDefault();
@@ -852,7 +866,7 @@
                     e.preventDefault();
                     e.stopPropagation();
                     const deltaY = e.touches[0].clientY - startY;
-                    
+
                     if (deltaY < -20) {
                         number = (number + 1) % 17; // 0-16 순환
                         updateNumber();
@@ -895,17 +909,17 @@
         highlightCells.forEach(cell => {
             let number = 0;
             let startY = 0;
-            
+
             // 과착 셀인지 확인 (첫 번째 행)
             const isFirstRow = cell.dataset.type === '과착';
-            
+
             function updateNumber() {
                 cell.textContent = number;
                 hasUnsavedChanges = true; // 변경 사항 있음 표시
                 saveToServer(); // 값이 변경될 때마다 서버에 자동 저장 (디바운스 적용)
                 updateHighlights(); // 하이라이트 업데이트
             }
-            
+
             cell.addEventListener('touchstart', e => {
                 if (e.touches.length === 1) { // 단일 터치만 처리
                     e.preventDefault();
@@ -922,7 +936,7 @@
                     e.preventDefault();
                     e.stopPropagation();
                     const deltaY = e.touches[0].clientY - startY;
-                    
+
                     if (deltaY < -20) {
                         if (isFirstRow) {
                             number = (number + 1) % 16; // 0-15 순환
@@ -986,35 +1000,54 @@
         });
         // Prevent page scroll when interacting with cells, but allow container scroll
         document.addEventListener('touchmove', e => {
-            if (e.touches.length === 1 && 
-                (e.target.closest('.interactive-cell') || e.target.closest('.number-only-cell') || e.target.closest('.highlight-cell')) 
+            if (e.touches.length === 1 &&
+                (e.target.closest('.interactive-cell') || e.target.closest('.number-only-cell') || e.target.closest('.highlight-cell'))
                 && !e.target.closest('.table-container')) {
                 e.preventDefault();
             }
         }, { passive: false });
-        
-        // 핀치 줌 기능 구현 - 테이블 내에서도 작동하도록 개선
+
+        // 핀치 줌 및 이동 기능 구현 - 테이블 내에서도 작동하도록 개선
         document.addEventListener('touchstart', e => {
             if (e.touches.length === 2) {
-                // 두 손가락 터치 시 항상 핀치 줌 모드로 전환
+                // 두 손가락 터치 시 핀치 줌 및 이동 모드로 전환
                 e.preventDefault();
                 e.stopPropagation();
                 initialDistance = getDistance(e.touches[0], e.touches[1]);
                 initialScale = currentScale;
+                
+                // 두 터치 포인트의 중심점 계산
+                initialCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                initialCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
             }
         }, { passive: false });
         
         document.addEventListener('touchmove', e => {
             if (e.touches.length === 2) {
-                // 두 손가락 터치 시 핀치 줌 실행 (테이블 내부에서도)
+                // 두 손가락 터치 시 핀치 줌 및 이동 실행 (테이블 내부에서도)
                 e.preventDefault();
                 e.stopPropagation();
+                
+                // 줌 계산
                 const currentDistance = getDistance(e.touches[0], e.touches[1]);
                 const scale = (currentDistance / initialDistance) * initialScale;
-                
-                // 확대/축소 비율 제한 (0.1 ~ 3배) - 최소 축소 비율 0.1로 설정
                 const limitedScale = Math.min(Math.max(MIN_SCALE, scale), MAX_SCALE);
-                setAppScale(limitedScale);
+                
+                // 이동 계산
+                const currentCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                const currentCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                const deltaX = currentCenterX - initialCenterX;
+                const deltaY = currentCenterY - initialCenterY;
+                
+                // 스케일과 이동을 동시에 적용
+                currentScale = limitedScale;
+                currentTranslateX += deltaX;
+                currentTranslateY += deltaY;
+                updateTransform();
+                
+                // 다음 프레임을 위한 초기값 업데이트
+                initialCenterX = currentCenterX;
+                initialCenterY = currentCenterY;
             } else if (e.touches.length === 1) {
                 // 한 손가락 터치 시에만 셀 상호작용 허용
                 const target = e.target.closest('.interactive-cell, .number-only-cell, .highlight-cell');
