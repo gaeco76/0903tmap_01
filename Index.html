@@ -26,7 +26,6 @@
             position: relative;
             padding: 5% 10% 0 5%;
             /* 우측 여백을 10%로 변경 */
-            will-change: transform; /* GPU 가속을 위한 최적화 */
         }
 
         .table-container {
@@ -363,15 +362,14 @@
         let initialCenterY = 0;
         let currentTranslateX = 0;
         let currentTranslateY = 0;
+        let isZooming = false;
+        let isPanning = false;
+        let lastCenterX = 0;
+        let lastCenterY = 0;
         const MIN_SCALE = 0.1;
         const MAX_SCALE = 3;
-
-        // 한손가락 팬 관련 변수
-        let singleTouchStartX = 0;
-        let singleTouchStartY = 0;
-        let isPanning = false;
-        let lastPanX = 0;
-        let lastPanY = 0;
+        const ZOOM_THRESHOLD = 0.1; // 줌 감지 임계값
+        const PAN_THRESHOLD = 10; // 팬 감지 임계값
 
         function setAppScale(scale) {
             currentScale = scale;
@@ -968,21 +966,16 @@
                 e.stopPropagation();
                 initialDistance = getDistance(e.touches[0], e.touches[1]);
                 initialScale = currentScale;
-
+                
                 // 두 터치 포인트의 중심점 계산
                 initialCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 initialCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-            } else if (e.touches.length === 1) {
-                // 한 손가락 터치 시 - 테이블 밖 영역에서 팬 기능 활성화
-                const target = e.target.closest('.interactive-cell, .number-only-cell, .highlight-cell');
-                if (!target) {
-                    // 테이블 밖 영역에서 터치 시작
-                    singleTouchStartX = e.touches[0].clientX;
-                    singleTouchStartY = e.touches[0].clientY;
-                    lastPanX = e.touches[0].clientX;
-                    lastPanY = e.touches[0].clientY;
-                    isPanning = false;
-                }
+                lastCenterX = initialCenterX;
+                lastCenterY = initialCenterY;
+                
+                // 초기 상태 설정
+                isZooming = false;
+                isPanning = false;
             }
         }, { passive: false });
 
@@ -991,78 +984,66 @@
                 // 두 손가락 터치 시 핀치 줌 및 이동 실행 (테이블 내부에서도)
                 e.preventDefault();
                 e.stopPropagation();
-
-                // 줌 계산
+                
+                // 현재 거리와 중심점 계산
                 const currentDistance = getDistance(e.touches[0], e.touches[1]);
-                const scale = (currentDistance / initialDistance) * initialScale;
-
-                // 확대/축소 비율 제한 (0.1 ~ 3배) - 최소 축소 비율 0.1로 설정
-                const limitedScale = Math.min(Math.max(MIN_SCALE, scale), MAX_SCALE);
-
-                // 이동 계산
                 const currentCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 const currentCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-                const deltaX = currentCenterX - initialCenterX;
-                const deltaY = currentCenterY - initialCenterY;
-
-                // 스케일과 이동을 동시에 적용
-                currentScale = limitedScale;
-                currentTranslateX += deltaX;
-                currentTranslateY += deltaY;
+                
+                // 줌 감지 (거리 변화)
+                const distanceChange = Math.abs(currentDistance - initialDistance) / initialDistance;
+                if (distanceChange > ZOOM_THRESHOLD && !isPanning) {
+                    isZooming = true;
+                }
+                
+                // 팬 감지 (중심점 이동)
+                const centerDeltaX = Math.abs(currentCenterX - lastCenterX);
+                const centerDeltaY = Math.abs(currentCenterY - lastCenterY);
+                if ((centerDeltaX > PAN_THRESHOLD || centerDeltaY > PAN_THRESHOLD) && !isZooming) {
+                    isPanning = true;
+                }
+                
+                // 줌 실행 (줌 모드이고 팬 모드가 아닐 때)
+                if (isZooming && !isPanning) {
+                    const scale = (currentDistance / initialDistance) * initialScale;
+                    const limitedScale = Math.min(Math.max(MIN_SCALE, scale), MAX_SCALE);
+                    currentScale = limitedScale;
+                }
+                
+                // 팬 실행 (팬 모드이고 줌 모드가 아닐 때)
+                if (isPanning && !isZooming) {
+                    const deltaX = currentCenterX - lastCenterX;
+                    const deltaY = currentCenterY - lastCenterY;
+                    currentTranslateX += deltaX;
+                    currentTranslateY += deltaY;
+                }
+                
+                // transform 업데이트
                 updateTransform();
-
-                // 다음 프레임을 위한 초기값 업데이트
-                initialCenterX = currentCenterX;
-                initialCenterY = currentCenterY;
+                
+                // 다음 프레임을 위한 값 업데이트
+                lastCenterX = currentCenterX;
+                lastCenterY = currentCenterY;
             } else if (e.touches.length === 1) {
-                // 한 손가락 터치 시
+                // 한 손가락 터치 시에만 셀 상호작용 허용
                 const target = e.target.closest('.interactive-cell, .number-only-cell, .highlight-cell');
                 if (target && !e.target.closest('.table-container')) {
-                    // 테이블 셀 내부에서는 셀 상호작용 허용
                     e.preventDefault();
-                } else {
-                    // 테이블 밖 영역에서는 팬 기능 활성화
-                    const currentX = e.touches[0].clientX;
-                    const currentY = e.touches[0].clientY;
-                    const deltaX = currentX - singleTouchStartX;
-                    const deltaY = currentY - singleTouchStartY;
-                    
-                    // 팬 감지 임계값 (15px로 낮춤)
-                    if (!isPanning && (Math.abs(deltaX) > 15 || Math.abs(deltaY) > 15)) {
-                        isPanning = true;
-                    }
-                    
-                    if (isPanning) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        // 이전 프레임과의 차이를 계산하여 부드러운 이동
-                        const frameDeltaX = currentX - lastPanX;
-                        const frameDeltaY = currentY - lastPanY;
-                        
-                        // 팬 이동 적용 (프레임별 차이 사용)
-                        currentTranslateX += frameDeltaX;
-                        currentTranslateY += frameDeltaY;
-                        updateTransform();
-                        
-                        // 현재 위치를 다음 프레임을 위한 기준점으로 저장
-                        lastPanX = currentX;
-                        lastPanY = currentY;
-                    }
                 }
             }
         }, { passive: false });
-
-        // 터치 종료 시 팬 상태 초기화
+        
+        // 터치 종료 시 상태 초기화
         document.addEventListener('touchend', e => {
             if (e.touches.length === 0) {
-                // 모든 터치가 종료되면 팬 상태 초기화
+                // 모든 터치가 종료되면 상태 초기화
+                isZooming = false;
                 isPanning = false;
-                lastPanX = 0;
-                lastPanY = 0;
+                lastCenterX = 0;
+                lastCenterY = 0;
             }
         }, { passive: false });
-
+        
         // 두 터치 포인트 사이의 거리 계산
         function getDistance(touch1, touch2) {
             const dx = touch1.clientX - touch2.clientX;
