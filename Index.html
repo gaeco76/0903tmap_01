@@ -364,6 +364,11 @@
         let currentTranslateY = 0;
         const MIN_SCALE = 0.1;
         const MAX_SCALE = 3;
+        
+        // 한손가락 팬 관련 변수
+        let singleTouchStartX = 0;
+        let singleTouchStartY = 0;
+        let isPanning = false;
 
         function setAppScale(scale) {
             currentScale = scale;
@@ -725,7 +730,7 @@
                             isScrolling = true;
                         }
                     }
-                    
+
                     if (isSwiping && Math.abs(deltaX) > 50) {
                         mode = (mode + 1) % modes.length;
                         updateDisplay();
@@ -960,10 +965,19 @@
                 e.stopPropagation();
                 initialDistance = getDistance(e.touches[0], e.touches[1]);
                 initialScale = currentScale;
-
+                
                 // 두 터치 포인트의 중심점 계산
                 initialCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 initialCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            } else if (e.touches.length === 1) {
+                // 한 손가락 터치 시 - 테이블 밖 영역에서 팬 기능 활성화
+                const target = e.target.closest('.interactive-cell, .number-only-cell, .highlight-cell');
+                if (!target) {
+                    // 테이블 밖 영역에서 터치 시작
+                    singleTouchStartX = e.touches[0].clientX;
+                    singleTouchStartY = e.touches[0].clientY;
+                    isPanning = false;
+                }
             }
         }, { passive: false });
 
@@ -996,13 +1010,46 @@
                 initialCenterX = currentCenterX;
                 initialCenterY = currentCenterY;
             } else if (e.touches.length === 1) {
-                // 한 손가락 터치 시에만 셀 상호작용 허용
+                // 한 손가락 터치 시
                 const target = e.target.closest('.interactive-cell, .number-only-cell, .highlight-cell');
                 if (target && !e.target.closest('.table-container')) {
+                    // 테이블 셀 내부에서는 셀 상호작용 허용
                     e.preventDefault();
+                } else {
+                    // 테이블 밖 영역에서는 팬 기능 활성화
+                    const deltaX = e.touches[0].clientX - singleTouchStartX;
+                    const deltaY = e.touches[0].clientY - singleTouchStartY;
+                    
+                    // 팬 감지 임계값 (20px)
+                    if (!isPanning && (Math.abs(deltaX) > 20 || Math.abs(deltaY) > 20)) {
+                        isPanning = true;
+                    }
+                    
+                    if (isPanning) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // 팬 이동 적용
+                        currentTranslateX += deltaX;
+                        currentTranslateY += deltaY;
+                        updateTransform();
+                        
+                        // 다음 프레임을 위한 시작점 업데이트
+                        singleTouchStartX = e.touches[0].clientX;
+                        singleTouchStartY = e.touches[0].clientY;
+                    }
                 }
             }
         }, { passive: false });
+        
+        // 터치 종료 시 팬 상태 초기화
+        document.addEventListener('touchend', e => {
+            if (e.touches.length === 0) {
+                // 모든 터치가 종료되면 팬 상태 초기화
+                isPanning = false;
+            }
+        }, { passive: false });
+        
         // 두 터치 포인트 사이의 거리 계산
         function getDistance(touch1, touch2) {
             const dx = touch1.clientX - touch2.clientX;
