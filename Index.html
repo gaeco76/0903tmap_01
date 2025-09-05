@@ -599,7 +599,7 @@
                     if (data.table1 && data.table1.length > 0) {
                         hasData = true;
                         syncWithServerData(data);
-                        
+
                         // 로컬 스토리지에도 저장
                         localStorage.setItem('TABLE_DATA_LOCAL', JSON.stringify(data));
                     }
@@ -621,7 +621,7 @@
                         if (localData) {
                             const parsedData = JSON.parse(localData);
                             syncWithServerData(parsedData);
-                            
+
                             if (showMessage) {
                                 showStatusMessage('로컬 데이터를 불러왔습니다.');
                             }
@@ -719,14 +719,14 @@
                     const deltaY = e.touches[0].clientY - startY;
 
                     if (!isSwiping && !isScrolling) {
-                        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+                        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 15) {
                             isSwiping = true;
-                        } else if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 10) {
+                        } else if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 15) {
                             isScrolling = true;
                         }
                     }
-
-                    if (isSwiping && Math.abs(deltaX) > 30) {
+                    
+                    if (isSwiping && Math.abs(deltaX) > 50) {
                         mode = (mode + 1) % modes.length;
                         updateDisplay();
                         isSwiping = false;
@@ -734,11 +734,11 @@
                     }
 
                     if (isScrolling && modes[mode] === '과착') { // "숫자"를 "과착"으로 변경
-                        if (deltaY < -20) {
+                        if (deltaY < -40) {
                             number = (number + 1) % 32; // 0-31 순환
                             updateDisplay();
                             startY = e.touches[0].clientY;
-                        } else if (deltaY > 20) {
+                        } else if (deltaY > 40) {
                             number = (number - 1 + 32) % 32; // 0-31 순환
                             updateDisplay();
                             startY = e.touches[0].clientY;
@@ -812,11 +812,11 @@
                     e.stopPropagation();
                     const deltaY = e.touches[0].clientY - startY;
 
-                    if (deltaY < -20) {
+                    if (deltaY < -40) {
                         number = (number + 1) % 17; // 0-16 순환
                         updateNumber();
                         startY = e.touches[0].clientY;
-                    } else if (deltaY > 20) {
+                    } else if (deltaY > 40) {
                         number = (number - 1 + 17) % 17; // 0-16 순환
                         updateNumber();
                         startY = e.touches[0].clientY;
@@ -882,7 +882,7 @@
                     e.stopPropagation();
                     const deltaY = e.touches[0].clientY - startY;
 
-                    if (deltaY < -20) {
+                    if (deltaY < -40) {
                         if (isFirstRow) {
                             number = (number + 1) % 16; // 0-15 순환
                         } else {
@@ -890,7 +890,7 @@
                         }
                         updateNumber();
                         startY = e.touches[0].clientY;
-                    } else if (deltaY > 20) {
+                    } else if (deltaY > 40) {
                         if (isFirstRow) {
                             number = (number - 1 + 16) % 16; // 0-15 순환
                         } else {
@@ -1017,7 +1017,7 @@
                 table2: [],
                 highlightTable: []
             };
-            
+
             // Collect data from both tables
             document.querySelectorAll('#mainTable .interactive-cell, #mainTable .number-only-cell').forEach(cell => {
                 data.table1.push({
@@ -1026,7 +1026,7 @@
                     value: cell.querySelector('.cell-content').textContent
                 });
             });
-            
+
             document.querySelectorAll('#mainTable2 .interactive-cell, #mainTable2 .number-only-cell').forEach(cell => {
                 data.table2.push({
                     row: cell.dataset.row,
@@ -1034,7 +1034,7 @@
                     value: cell.querySelector('.cell-content').textContent
                 });
             });
-            
+
             // Collect data from highlight table
             document.querySelectorAll('#highlightTable .highlight-cell').forEach(cell => {
                 data.highlightTable.push({
@@ -1042,7 +1042,7 @@
                     value: cell.textContent
                 });
             });
-            
+
             return data;
         }
 
@@ -1105,15 +1105,15 @@
                                 // 현재 데이터와 서버 데이터 비교하여 충돌 해결
                                 const currentData = getCurrentTableData();
                                 const currentDataString2 = JSON.stringify(currentData);
-                                
+
                                 // 현재 데이터가 서버 데이터와 다르고, 저장되지 않은 변경사항이 있는 경우
                                 if (currentDataString2 !== serverDataString && hasUnsavedChanges) {
                                     // 사용자에게 충돌 알림
                                     showStatusMessage('다른 기기에서 변경된 데이터가 있습니다. 서버 데이터로 동기화합니다.', false);
-                                    
+
                                     // 현재 변경사항을 먼저 저장 시도
                                     saveToServer();
-                                    
+
                                     // 잠시 후 서버 데이터로 동기화
                                     setTimeout(() => {
                                         syncWithServerData(data);
@@ -1128,7 +1128,7 @@
                             saveToServer();
                         }
                     })
-                    .withFailureHandler(function(error) {
+                    .withFailureHandler(function (error) {
                         console.log('서버 동기화 실패:', error);
                     })
                     .loadData();
@@ -1180,7 +1180,7 @@
             });
 
             // 페이지 가시성 변경 시 동기화 (다른 탭에서 돌아올 때)
-            document.addEventListener('visibilitychange', function() {
+            document.addEventListener('visibilitychange', function () {
                 if (!document.hidden && !isSaving) {
                     // 페이지가 다시 보이면 서버에서 최신 데이터 확인 (메시지 없이)
                     setTimeout(() => {
