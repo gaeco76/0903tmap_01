@@ -26,6 +26,7 @@
             position: relative;
             padding: 5% 10% 0 5%;
             /* 우측 여백을 10%로 변경 */
+            will-change: transform; /* GPU 가속을 위한 최적화 */
         }
 
         .table-container {
@@ -364,11 +365,13 @@
         let currentTranslateY = 0;
         const MIN_SCALE = 0.1;
         const MAX_SCALE = 3;
-        
+
         // 한손가락 팬 관련 변수
         let singleTouchStartX = 0;
         let singleTouchStartY = 0;
         let isPanning = false;
+        let lastPanX = 0;
+        let lastPanY = 0;
 
         function setAppScale(scale) {
             currentScale = scale;
@@ -965,7 +968,7 @@
                 e.stopPropagation();
                 initialDistance = getDistance(e.touches[0], e.touches[1]);
                 initialScale = currentScale;
-                
+
                 // 두 터치 포인트의 중심점 계산
                 initialCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 initialCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
@@ -976,6 +979,8 @@
                     // 테이블 밖 영역에서 터치 시작
                     singleTouchStartX = e.touches[0].clientX;
                     singleTouchStartY = e.touches[0].clientY;
+                    lastPanX = e.touches[0].clientX;
+                    lastPanY = e.touches[0].clientY;
                     isPanning = false;
                 }
             }
@@ -1017,11 +1022,13 @@
                     e.preventDefault();
                 } else {
                     // 테이블 밖 영역에서는 팬 기능 활성화
-                    const deltaX = e.touches[0].clientX - singleTouchStartX;
-                    const deltaY = e.touches[0].clientY - singleTouchStartY;
+                    const currentX = e.touches[0].clientX;
+                    const currentY = e.touches[0].clientY;
+                    const deltaX = currentX - singleTouchStartX;
+                    const deltaY = currentY - singleTouchStartY;
                     
-                    // 팬 감지 임계값 (20px)
-                    if (!isPanning && (Math.abs(deltaX) > 20 || Math.abs(deltaY) > 20)) {
+                    // 팬 감지 임계값 (15px로 낮춤)
+                    if (!isPanning && (Math.abs(deltaX) > 15 || Math.abs(deltaY) > 15)) {
                         isPanning = true;
                     }
                     
@@ -1029,27 +1036,33 @@
                         e.preventDefault();
                         e.stopPropagation();
                         
-                        // 팬 이동 적용
-                        currentTranslateX += deltaX;
-                        currentTranslateY += deltaY;
+                        // 이전 프레임과의 차이를 계산하여 부드러운 이동
+                        const frameDeltaX = currentX - lastPanX;
+                        const frameDeltaY = currentY - lastPanY;
+                        
+                        // 팬 이동 적용 (프레임별 차이 사용)
+                        currentTranslateX += frameDeltaX;
+                        currentTranslateY += frameDeltaY;
                         updateTransform();
                         
-                        // 다음 프레임을 위한 시작점 업데이트
-                        singleTouchStartX = e.touches[0].clientX;
-                        singleTouchStartY = e.touches[0].clientY;
+                        // 현재 위치를 다음 프레임을 위한 기준점으로 저장
+                        lastPanX = currentX;
+                        lastPanY = currentY;
                     }
                 }
             }
         }, { passive: false });
-        
+
         // 터치 종료 시 팬 상태 초기화
         document.addEventListener('touchend', e => {
             if (e.touches.length === 0) {
                 // 모든 터치가 종료되면 팬 상태 초기화
                 isPanning = false;
+                lastPanX = 0;
+                lastPanY = 0;
             }
         }, { passive: false });
-        
+
         // 두 터치 포인트 사이의 거리 계산
         function getDistance(touch1, touch2) {
             const dx = touch1.clientX - touch2.clientX;
