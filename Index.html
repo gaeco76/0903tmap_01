@@ -97,8 +97,8 @@
         /* 하단 테이블 컨테이너 스타일 */
         .bottom-tables-container {
             display: flex;
-            justify-content: center;
-            /* 가운데 정렬 */
+            justify-content: flex-start;
+            /* 좌측 정렬로 변경 */
             align-items: flex-start;
             margin-top: 10px;
             gap: 2px;
@@ -370,7 +370,7 @@
         const MAX_SCALE = 3;
         const ZOOM_THRESHOLD = 0.1; // 줌 감지 임계값
         const PAN_THRESHOLD = 10; // 팬 감지 임계값
-        
+
         // 한 손 터치 팬 관련 변수
         let singleTouchStartX = 0;
         let singleTouchStartY = 0;
@@ -974,13 +974,13 @@
                 e.stopPropagation();
                 initialDistance = getDistance(e.touches[0], e.touches[1]);
                 initialScale = currentScale;
-                
+
                 // 두 터치 포인트의 중심점 계산
                 initialCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 initialCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
                 lastCenterX = initialCenterX;
                 lastCenterY = initialCenterY;
-                
+
                 // 초기 상태 설정
                 isZooming = false;
                 isPanning = false;
@@ -1055,25 +1055,25 @@
                     const currentY = e.touches[0].clientY;
                     const deltaX = currentX - singleTouchStartX;
                     const deltaY = currentY - singleTouchStartY;
-                    
+
                     // 팬 감지 임계값
                     if (!isSingleTouchPanning && (Math.abs(deltaX) > SINGLE_TOUCH_PAN_THRESHOLD || Math.abs(deltaY) > SINGLE_TOUCH_PAN_THRESHOLD)) {
                         isSingleTouchPanning = true;
                     }
-                    
+
                     if (isSingleTouchPanning) {
                         e.preventDefault();
                         e.stopPropagation();
-                        
+
                         // 이전 프레임과의 차이를 계산하여 부드러운 이동
                         const frameDeltaX = currentX - lastSingleTouchX;
                         const frameDeltaY = currentY - lastSingleTouchY;
-                        
+
                         // 팬 이동 적용 (프레임별 차이 사용)
                         currentTranslateX += frameDeltaX;
                         currentTranslateY += frameDeltaY;
                         updateTransform();
-                        
+
                         // 현재 위치를 다음 프레임을 위한 기준점으로 저장
                         lastSingleTouchX = currentX;
                         lastSingleTouchY = currentY;
@@ -1090,7 +1090,7 @@
                 isPanning = false;
                 lastCenterX = 0;
                 lastCenterY = 0;
-                
+
                 // 한 손 터치 팬 상태 초기화
                 isSingleTouchPanning = false;
                 lastSingleTouchX = 0;
